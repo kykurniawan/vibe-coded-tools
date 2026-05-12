@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JWT Decoder — Vibe-Coded Tools</title>
+    <meta name="description" content="Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        textarea { resize: vertical; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-700 dark:text-gray-300">JWT Decoder</span>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight mb-2">🔑 JWT Decoder</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-8">Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.</p>
+        
+    <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">JWT Token</label>
+        <textarea id="input" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0."></textarea>
+    </div>
+    <button onclick="decodeJWT()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium mb-6">🔓 Decode</button>
+    <div id="results" class="space-y-4"></div>
+    <div id="error" class="text-sm text-red-500 hidden"></div>
+    <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+        <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About JWT</summary>
+        <div class="mt-2 leading-relaxed">
+            <p>A JWT (JSON Web Token) has three base64url-encoded parts separated by dots: <strong>header.payload.signature</strong>. This tool decodes the header and payload only — it does NOT verify the signature. No data is sent anywhere.</p>
+        </div>
+    </details>
+    <script>
+    const input = document.getElementById('input');
+    const results = document.getElementById('results');
+    const error = document.getElementById('error');
+
+    function decodeJWT() {
+        error.classList.add('hidden');
+        const token = input.value.trim();
+        if (!token) { showError('Enter a JWT token.'); return; }
+        const parts = token.split('.');
+        if (parts.length !== 3) { showError('Invalid JWT format. Expected 3 dot-separated parts.'); return; }
+        try {
+            const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            results.innerHTML = `
+                <div>
+                    <h3 class="text-sm font-semibold mb-1">Header</h3>
+                    <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs font-mono overflow-x-auto">${escapeHtml(JSON.stringify(header, null, 2))}</pre>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold mb-1">Payload</h3>
+                    <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs font-mono overflow-x-auto">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+                </div>
+                <div>
+                    <h3 class="text-sm font-semibold mb-1">Signature</h3>
+                    <p class="text-xs text-gray-400 font-mono">${parts[2].substring(0, 32)}… (${parts[2].length} chars)</p>
+                </div>`;
+        } catch (e) { showError('Failed to decode: ' + e.message); }
+    }
+    function showError(msg) { error.textContent = msg; error.classList.remove('hidden'); results.innerHTML = ''; }
+    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    </script>
+    
+        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/jwt-decoder" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        </div>
+    </div>
+    <script>
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+    
+</body>
+</html>

@@ -27,6 +27,13 @@
       "description": "Format, validate, and minify JSON. Beautify messy JSON with syntax highlighting and line numbers.",
       "icon": "\ud83d\udccb",
       "path": "/json-formatter/"
+    },
+    {
+      "id": "jwt-decoder",
+      "name": "JWT Decoder",
+      "description": "Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.",
+      "icon": "\ud83d\udd11",
+      "path": "/jwt-decoder/"
     }
   ]
 }
