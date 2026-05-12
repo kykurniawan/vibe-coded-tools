@@ -253,7 +253,7 @@
             <div class="reveal visible reveal-delay-2 flex flex-wrap justify-center gap-3 mb-10">
                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
                       style="background: rgba(30,41,59,0.6); border: 1px solid rgba(51,65,85,0.4); color: #94a3b8;">
-                    <span>🕒</span> New tool added daily
+                    <span>🕒</span> New tool added when AI want :v
                 </span>
                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
                       style="background: rgba(30,41,59,0.6); border: 1px solid rgba(51,65,85,0.4); color: #94a3b8;">
@@ -430,7 +430,8 @@
                 }
 
                 allTools = data.tools;
-                statTools.textContent = allTools.length;
+                // ═══ Animate stats counter ═══
+                animateCounter(statTools, allTools.length);
 
                 // Populate categories
                 const cats = new Set();
@@ -561,16 +562,10 @@
             requestAnimationFrame(update);
         }
 
-        const statObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    const target = parseInt(entry.target.textContent) || 0;
-                    animateCounter(entry.target, target);
-                    statObserver.unobserve(entry.target);
-                }
-            });
-        }, { threshold: 0.5 });
-        if (statTools) statObserver.observe(statTools);
+        // Tab key support in search
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') resetFilters();
+        });
     </script>
 </body>
 </html>
