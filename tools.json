@@ -34,6 +34,13 @@
       "description": "Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.",
       "icon": "\ud83d\udd11",
       "path": "jwt-decoder/"
+    },
+    {
+      "id": "timestamp-converter",
+      "name": "Timestamp Converter",
+      "description": "Convert between Unix timestamps (seconds/milliseconds) and human-readable dates in various timezones.",
+      "icon": "\u23f1\ufe0f",
+      "path": "timestamp-converter/"
     }
   ]
 }
