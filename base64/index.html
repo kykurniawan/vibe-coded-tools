@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Base64 Encoder / Decoder — Vibe-Coded Tools</title>
+    <meta name="description" content="Encode text to Base64 or decode Base64 strings. Runs entirely in your browser." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        textarea { resize: vertical; }
+        .copy-btn { @apply absolute top-3 right-3 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <!-- Breadcrumb -->
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-700 dark:text-gray-300">Base64 Encoder / Decoder</span>
+        </div>
+
+        <h1 class="text-3xl font-bold tracking-tight mb-2">🔐 Base64 Encoder / Decoder</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-8">Encode text to Base64 or decode Base64 strings. All processing is done in your browser — nothing is uploaded.</p>
+
+        <!-- Input -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Input</label>
+            <div class="relative">
+                <textarea id="input" rows="6" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="Type or paste your text here…"></textarea>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex flex-wrap gap-3 mb-8">
+            <button onclick="encode()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors">⬇ Encode to Base64</button>
+            <button onclick="decode()" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium text-sm transition-colors">⬆ Decode from Base64</button>
+            <button onclick="swap()" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">⇄ Swap</button>
+            <button onclick="clearAll()" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">✕ Clear</button>
+        </div>
+
+        <!-- Output -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium mb-2">Output</label>
+            <div class="relative">
+                <textarea id="output" rows="6" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" readonly placeholder="Result will appear here…" onclick="this.select()"></textarea>
+                <button onclick="copyOutput()" class="copy-btn" title="Copy to clipboard">📋 Copy</button>
+            </div>
+        </div>
+
+        <!-- Status / error -->
+        <div id="status" class="text-sm text-gray-500 dark:text-gray-400 mb-4 hidden"></div>
+
+        <!-- Error display -->
+        <div id="error" class="text-sm text-red-600 dark:text-red-400 mb-4 hidden"></div>
+
+        <!-- Info -->
+        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About Base64</summary>
+            <div class="mt-2 space-y-1 leading-relaxed">
+                <p>Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It's commonly used for:</p>
+                <ul class="list-disc list-inside mt-1 space-y-0.5">
+                    <li>Embedding images (data URIs) in HTML/CSS</li>
+                    <li>Encoding email attachments (MIME)</li>
+                    <li>Storing binary data in JSON or databases</li>
+                    <li>Authentication headers (Basic Auth)</li>
+                </ul>
+                <p class="mt-2">This tool uses the standard Base64 alphabet with <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">+</code> and <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">/</code> characters and <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">=</code> padding.</p>
+            </div>
+        </details>
+
+        <!-- Footer disclaimer -->
+        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/base64" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        </div>
+    </div>
+
+    <script>
+        const input  = document.getElementById('input');
+        const output = document.getElementById('output');
+        const status = document.getElementById('status');
+        const error  = document.getElementById('error');
+
+        function showStatus(msg) {
+            status.textContent = msg;
+            status.classList.remove('hidden');
+            error.classList.add('hidden');
+        }
+
+        function showError(msg) {
+            error.textContent = msg;
+            error.classList.remove('hidden');
+            status.classList.add('hidden');
+        }
+
+        function hideMessages() {
+            status.classList.add('hidden');
+            error.classList.add('hidden');
+        }
+
+        function encode() {
+            hideMessages();
+            const text = input.value;
+            if (!text) { output.value = ''; showStatus('Enter some text first.'); return; }
+            try {
+                output.value = btoa(unescape(encodeURIComponent(text)));
+                showStatus(`Encoded ${text.length} characters → ${output.value.length} characters`);
+            } catch (e) {
+                showError('Encoding failed: ' + e.message);
+                output.value = '';
+            }
+        }
+
+        function decode() {
+            hideMessages();
+            const text = input.value.trim();
+            if (!text) { output.value = ''; showStatus('Enter a Base64 string first.'); return; }
+            try {
+                const decoded = decodeURIComponent(escape(atob(text)));
+                output.value = decoded;
+                showStatus(`Decoded ${text.length} characters → ${decoded.length} characters`);
+            } catch (e) {
+                showError('Invalid Base64 string. Make sure it contains only valid Base64 characters (A-Z, a-z, 0-9, +, /, =).');
+                output.value = '';
+            }
+        }
+
+        function swap() {
+            const temp = input.value;
+            input.value = output.value;
+            output.value = temp;
+            hideMessages();
+        }
+
+        function clearAll() {
+            input.value = '';
+            output.value = '';
+            hideMessages();
+        }
+
+        function copyOutput() {
+            if (!output.value) return;
+            navigator.clipboard.writeText(output.value).then(() => {
+                showStatus('Copied to clipboard!');
+            }).catch(() => {
+                output.select();
+                document.execCommand('copy');
+                showStatus('Copied!');
+            });
+        }
+
+        // Keyboard shortcuts
+        input.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); encode(); }
+        });
+
+        // Dark mode
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

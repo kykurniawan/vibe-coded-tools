@@ -1,0 +1,25 @@
+{
+  "tools": [
+    {
+      "id": "base64",
+      "name": "Base64 Encoder / Decoder",
+      "description": "Encode text to Base64 or decode Base64 strings back to readable text. Supports UTF-8 and ASCII.",
+      "icon": "🔐",
+      "path": "/base64/"
+    },
+    {
+      "id": "uuid-generator",
+      "name": "UUID Generator",
+      "description": "Generate UUID v4 (random) and UUID v7 (time-ordered) with bulk generation and copy-to-clipboard.",
+      "icon": "🆔",
+      "path": "/uuid-generator/"
+    },
+    {
+      "id": "hash-generator",
+      "name": "Hash Generator",
+      "description": "Generate SHA-1, SHA-256, SHA-384, SHA-512 and MD5 hashes from any text input using browser-native crypto.",
+      "icon": "#️⃣",
+      "path": "/hash-generator/"
+    }
+  ]
+}

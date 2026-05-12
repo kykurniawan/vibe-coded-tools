@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hash Generator — Vibe-Coded Tools</title>
+    <meta name="description" content="Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text. Uses the Web Crypto API for SHA hashes." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>#️⃣</text></svg>" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        textarea { resize: vertical; }
+        .hash-output { @apply font-mono text-xs break-all bg-gray-50 dark:bg-gray-850 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 select-all; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <!-- Breadcrumb -->
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-700 dark:text-gray-300">Hash Generator</span>
+        </div>
+
+        <h1 class="text-3xl font-bold tracking-tight mb-2">#️⃣ Hash Generator</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-8">Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text input. SHA hashes use the browser's native <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">SubtleCrypto</code> API.</p>
+
+        <!-- Input -->
+        <div class="mb-6">
+            <label class="block text-sm font-medium mb-2">Input Text</label>
+            <textarea id="input" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="Type or paste text to hash…" oninput="computeAll()"></textarea>
+        </div>
+
+        <!-- Batch action -->
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+            <label class="text-sm font-medium">File:</label>
+            <label class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm cursor-pointer transition-colors">
+                📂 Hash File
+                <input type="file" id="fileInput" class="hidden" onchange="hashFile(this)" />
+            </label>
+            <button onclick="clearAll()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">✕ Clear</button>
+            <span id="inputInfo" class="text-xs text-gray-400"></span>
+        </div>
+
+        <!-- Hash results -->
+        <div id="results" class="space-y-3">
+            <div class="hash-row" data-algorithm="MD5">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">MD5</span>
+                    <span class="text-xs text-gray-400">128-bit</span>
+                    <button onclick="copyHash('MD5')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
+                </div>
+                <div id="hash-MD5" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
+            </div>
+            <div class="hash-row" data-algorithm="SHA-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-1</span>
+                    <span class="text-xs text-gray-400">160-bit</span>
+                    <button onclick="copyHash('SHA-1')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
+                </div>
+                <div id="hash-SHA-1" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
+            </div>
+            <div class="hash-row" data-algorithm="SHA-256">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-256</span>
+                    <span class="text-xs text-gray-400">256-bit</span>
+                    <button onclick="copyHash('SHA-256')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
+                </div>
+                <div id="hash-SHA-256" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
+            </div>
+            <div class="hash-row" data-algorithm="SHA-384">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-384</span>
+                    <span class="text-xs text-gray-400">384-bit</span>
+                    <button onclick="copyHash('SHA-384')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
+                </div>
+                <div id="hash-SHA-384" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
+            </div>
+            <div class="hash-row" data-algorithm="SHA-512">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-512</span>
+                    <span class="text-xs text-gray-400">512-bit</span>
+                    <button onclick="copyHash('SHA-512')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
+                </div>
+                <div id="hash-SHA-512" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
+            </div>
+        </div>
+
+        <!-- Info -->
+        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About Hash Algorithms</summary>
+            <div class="mt-2 space-y-2 leading-relaxed">
+                <p><strong>MD5</strong> — 128-bit hash. Fast but cryptographically broken. Use for checksums, not security.</p>
+                <p><strong>SHA-1</strong> — 160-bit hash. Deprecated for security, but still used in Git and legacy systems.</p>
+                <p><strong>SHA-256</strong> — 256-bit hash. Part of the SHA-2 family. Industry standard for TLS, certificates, blockchain.</p>
+                <p><strong>SHA-384</strong> — 384-bit hash. Truncated SHA-512 variant. Used in higher-security contexts.</p>
+                <p><strong>SHA-512</strong> — 512-bit hash. Strongest in the SHA-2 family. Slower but more resistant to collision attacks.</p>
+                <p class="mt-2 text-xs text-gray-400">MD5 is implemented in pure JavaScript. SHA hashes use the <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">Web Crypto API (SubtleCrypto)</code>.</p>
+            </div>
+        </details>
+
+        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/hash-generator" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        </div>
+    </div>
+
+    <script>
+        // ─── MD5 Implementation (pure JS, no dependencies) ──────────────────────
+        const MD5 = (() => {
+            const md5cycle = (x, k) => {
+                let a = x[0], b = x[1], c = x[2], d = x[3];
+                const cm = (q, a, b, x, s, t) => {
+                    const f = (q < 4)
+                        ? ((b & c) | (~b & d))
+                        : (q < 8)
+                            ? ((b & d) | (c & ~d))
+                            : (q < 12)
+                                ? (b ^ c ^ d)
+                                : (c ^ (b | ~d));
+                    const idx = [
+                        [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+                        [1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12],
+                        [5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2],
+                        [0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9]
+                    ][q >> 2];
+                    const sft = [7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21][q % 16 * 2 + (q >> 4)];
+                    return ((a + f + k[idx[q % 16]] + t) << sft | (a + f + k[idx[q % 16]] + t) >>> (32 - sft)) + b | 0;
+                };
+                const T = [
+                    0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
+                    0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
+                    0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
+                    0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
+                    0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
+                    0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
+                    0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
+                    0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
+                ];
+                for (let i = 0; i < 64; i++) {
+                    const q = i >> 4;
+                    const r = i % 16;
+                    const f = q === 0 ? ((b & c) | (~b & d))
+                        : q === 1 ? ((b & d) | (c & ~d))
+                        : q === 2 ? (b ^ c ^ d)
+                        : (c ^ (b | ~d));
+                    const g = q === 0 ? r
+                        : q === 1 ? (5 * r + 1) % 16
+                        : q === 2 ? (3 * r + 5) % 16
+                        : (7 * r) % 16;
+                    const sft = [7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21][q * 4 + (r >> 2)];
+                    const oldA = a;
+                    a = (b + ((a + f + k[g] + T[i]) << sft | (a + f + k[g] + T[i]) >>> (32 - sft))) | 0;
+                    d = c; c = b; b = oldA;
+                }
+                x[0] = (a + x[0]) | 0; x[1] = (b + x[1]) | 0; x[2] = (c + x[2]) | 0; x[3] = (d + x[3]) | 0;
+            };
+
+            const strToBytes = (s) => {
+                const bytes = [];
+                for (let i = 0; i < s.length; i++) {
+                    let c = s.charCodeAt(i);
+                    if (c < 0x80) bytes.push(c);
+                    else if (c < 0x800) { bytes.push(0xc0 | (c >> 6)); bytes.push(0x80 | (c & 0x3f)); }
+                    else if (c < 0xd800 || c >= 0xe000) { bytes.push(0xe0 | (c >> 12)); bytes.push(0x80 | ((c >> 6) & 0x3f)); bytes.push(0x80 | (c & 0x3f)); }
+                    else { i++; c = 0x10000 + ((c & 0x3ff) << 10) | (s.charCodeAt(i) & 0x3ff); bytes.push(0xf0 | (c >> 18)); bytes.push(0x80 | ((c >> 12) & 0x3f)); bytes.push(0x80 | ((c >> 6) & 0x3f)); bytes.push(0x80 | (c & 0x3f)); }
+                }
+                return bytes;
+            };
+
+            return (s) => {
+                const bytes = strToBytes(s);
+                const len = bytes.length * 8;
+                const padded = [...bytes, 0x80];
+                while ((padded.length * 8) % 512 !== 448) padded.push(0);
+                for (let i = 0; i < 8; i++) padded.push((len >>> (i * 8)) & 0xff);
+
+                let h = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
+                for (let i = 0; i < padded.length; i += 64) {
+                    const chunk = padded.slice(i, i + 64);
+                    const words = [];
+                    for (let j = 0; j < 64; j += 4) words.push(chunk[j] | (chunk[j+1] << 8) | (chunk[j+2] << 16) | (chunk[j+3] << 24));
+                    md5cycle(h, words);
+                }
+                return h.map(i => (i >>> 0).toString(16).padStart(8, '0')).join('');
+            };
+        })();
+
+        // ─── SHA (SubtleCrypto) ──────────────────────────────────────────────
+        async function shaHash(algorithm, text) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest(algorithm, data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ─── UI ──────────────────────────────────────────────────────────────
+        const input = document.getElementById('input');
+        const inputInfo = document.getElementById('inputInfo');
+
+        async function computeAll() {
+            const text = input.value;
+            inputInfo.textContent = text ? `${text.length} characters | ${new Blob([text]).size} bytes` : '';
+
+            if (!text) {
+                ['MD5','SHA-1','SHA-256','SHA-384','SHA-512'].forEach(algo => {
+                    document.getElementById(`hash-${algo}`).textContent = 'Waiting for input…';
+                    document.getElementById(`hash-${algo}`).className = 'hash-output text-gray-500 italic text-xs';
+                });
+                return;
+            }
+
+            // MD5 (sync)
+            document.getElementById('hash-MD5').textContent = MD5(text);
+            document.getElementById('hash-MD5').className = 'hash-output';
+
+            // SHA (async)
+            const shaAlgos = [
+                { name: 'SHA-1',   el: 'SHA-1' },
+                { name: 'SHA-256', el: 'SHA-256' },
+                { name: 'SHA-384', el: 'SHA-384' },
+                { name: 'SHA-512', el: 'SHA-512' },
+            ];
+
+            for (const { name, el } of shaAlgos) {
+                document.getElementById(`hash-${el}`).textContent = 'Computing…';
+                document.getElementById(`hash-${el}`).className = 'hash-output text-gray-400 text-xs';
+            }
+
+            const promises = shaAlgos.map(async ({ name, el }) => {
+                try {
+                    const hash = await shaHash(name, text);
+                    document.getElementById(`hash-${el}`).textContent = hash;
+                    document.getElementById(`hash-${el}`).className = 'hash-output';
+                } catch (e) {
+                    document.getElementById(`hash-${el}`).textContent = `Error: ${e.message}`;
+                    document.getElementById(`hash-${el}`).className = 'hash-output text-red-500';
+                }
+            });
+
+            await Promise.all(promises);
+        }
+
+        function copyHash(algo) {
+            const el = document.getElementById(`hash-${algo}`);
+            const text = el.textContent;
+            if (!text || text === 'Waiting for input…' || text === 'Computing…') return;
+            navigator.clipboard.writeText(text).catch(() => {});
+        }
+
+        function clearAll() {
+            input.value = '';
+            inputInfo.textContent = '';
+            computeAll();
+        }
+
+        // File hashing
+        async function hashFile(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                input.value = text;
+                inputInfo.textContent = `${text.length} characters | ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                await computeAll();
+            };
+            reader.readAsText(file);
+            fileInput.value = '';
+        }
+
+        // Dark mode
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>

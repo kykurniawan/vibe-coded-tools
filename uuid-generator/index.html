@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UUID Generator — Vibe-Coded Tools</title>
+    <meta name="description" content="Generate UUID v4 and UUID v7 identifiers. Bulk generation and one-click copy." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🆔</text></svg>" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        .uuid-row { @apply flex items-center gap-2 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-mono; }
+        .uuid-row:hover { @apply border-blue-300 dark:border-blue-600; }
+        .uuid-text { @apply flex-1 truncate select-all; }
+        .copy-mini { @apply text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shrink-0; }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+
+    <div class="max-w-3xl mx-auto px-4 py-10">
+        <!-- Breadcrumb -->
+        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            <a href="/" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
+            <span class="mx-2">/</span>
+            <span class="text-gray-700 dark:text-gray-300">UUID Generator</span>
+        </div>
+
+        <h1 class="text-3xl font-bold tracking-tight mb-2">🆔 UUID Generator</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-8">Generate UUID v4 (random) and UUID v7 (time-ordered) identifiers. All generated client-side using <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">crypto.randomUUID()</code>.</p>
+
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center gap-3 mb-6">
+            <label class="text-sm font-medium">UUID Version:</label>
+            <select id="version" class="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="v4">UUID v4 (Random)</option>
+                <option value="v7">UUID v7 (Time-ordered)</option>
+            </select>
+
+            <label class="text-sm font-medium ml-2">Count:</label>
+            <select id="count" class="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                <option value="1">1</option>
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+
+            <button onclick="generate()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors">🔄 Generate</button>
+            <button onclick="copyAll()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">📋 Copy All</button>
+            <button onclick="download()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">⬇ Download</button>
+        </div>
+
+        <!-- Results -->
+        <div id="results" class="space-y-2">
+            <!-- Generated UUIDs appear here -->
+        </div>
+
+        <p id="status" class="text-sm text-gray-400 mt-4 hidden"></p>
+
+        <!-- Info -->
+        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
+            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About UUID Versions</summary>
+            <div class="mt-2 space-y-2 leading-relaxed">
+                <div>
+                    <strong class="text-gray-700 dark:text-gray-300">UUID v4</strong> — Random UUID. All bits except the version (4) and variant (10xx) are randomly generated. 122 bits of entropy. Best for general-purpose use where uniqueness is the only requirement.
+                </div>
+                <div>
+                    <strong class="text-gray-700 dark:text-gray-300">UUID v7</strong> — Time-ordered UUID. 48 bits of Unix timestamp (ms precision) followed by random data. Monotonically increasing, sortable, database-index-friendly. Draft standard (RFC 9562).
+                </div>
+            </div>
+        </details>
+
+        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/uuid-generator" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        </div>
+    </div>
+
+    <script>
+        function uuidv4() {
+            return crypto.randomUUID();
+        }
+
+        function uuidv7() {
+            const timestamp = Date.now();
+            const bytes = new Uint8Array(16);
+            // 48-bit Unix timestamp (ms)
+            bytes[0] = (timestamp / 2**40) & 0xFF;
+            bytes[1] = (timestamp / 2**32) & 0xFF;
+            bytes[2] = (timestamp / 2**24) & 0xFF;
+            bytes[3] = (timestamp / 2**16) & 0xFF;
+            bytes[4] = (timestamp / 2**8) & 0xFF;
+            bytes[5] = timestamp & 0xFF;
+            // Random bytes for the rest
+            crypto.getRandomValues(bytes.subarray(6));
+            // Set version (7)
+            bytes[6] = (bytes[6] & 0x0F) | 0x70;
+            // Set variant (10xx)
+            bytes[8] = (bytes[8] & 0x3F) | 0x80;
+
+            const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+            return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
+        }
+
+        function generate() {
+            const version = document.getElementById('version').value;
+            const count = parseInt(document.getElementById('count').value);
+            const container = document.getElementById('results');
+            const status = document.getElementById('status');
+            const fn = version === 'v4' ? uuidv4 : uuidv7;
+
+            const uuids = [];
+            for (let i = 0; i < count; i++) uuids.push(fn());
+
+            // Deduplicate check
+            const unique = new Set(uuids);
+            const label = version === 'v4' ? 'UUID v4' : 'UUID v7';
+
+            container.innerHTML = uuids.map((uuid, i) => `
+                <div class="uuid-row group">
+                    <span class="text-xs text-gray-400 w-6 shrink-0">${i + 1}.</span>
+                    <span class="uuid-text" title="${uuid}">${uuid}</span>
+                    <button onclick="copySingle('${uuid}')" class="copy-mini opacity-0 group-hover:opacity-100 transition-opacity" title="Copy">📋</button>
+                </div>
+            `).join('');
+
+            status.textContent = `Generated ${count} ${label} (${unique.size} unique)`;
+            status.classList.remove('hidden');
+        }
+
+        function copySingle(uuid) {
+            navigator.clipboard.writeText(uuid).catch(() => {});
+        }
+
+        function copyAll() {
+            const items = document.querySelectorAll('.uuid-text');
+            if (!items.length) return;
+            const text = Array.from(items).map(el => el.textContent).join('\n');
+            navigator.clipboard.writeText(text).then(() => {
+                const status = document.getElementById('status');
+                status.textContent = `Copied ${items.length} UUIDs to clipboard!`;
+                status.classList.remove('hidden');
+            }).catch(() => {});
+        }
+
+        function download() {
+            const items = document.querySelectorAll('.uuid-text');
+            if (!items.length) return;
+            const text = Array.from(items).map(el => el.textContent).join('\n');
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'uuids.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Auto-generate on load
+        generate();
+
+        // Dark mode
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>
