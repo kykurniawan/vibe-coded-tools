@@ -7,15 +7,6 @@
     <meta name="description" content="A growing collection of free, privacy-first browser tools. Nothing leaves your device. No servers, no tracking, no ads." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
-    <script>
-        // Dark-first: default to dark, respect saved preference or system
-        (() => {
-            const saved = localStorage.getItem('theme');
-            if (saved === 'light') document.documentElement.classList.remove('dark');
-            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
-                document.documentElement.classList.add('dark');
-        })();
-    </script>
     <style>
         /* ── Reset & Base ── */
         *, *::before, *::after { box-sizing: border-box; }
@@ -90,16 +81,6 @@
         .tool-card:hover::before { opacity: 1; }
         .tool-card > * { position: relative; z-index: 1; }
 
-        /* Light mode overrides */
-        .light .tool-card {
-            background: rgba(255, 255, 255, 0.85);
-            border-color: rgba(203, 213, 225, 0.5);
-        }
-        .light .tool-card:hover {
-            border-color: rgba(59, 130, 246, 0.4);
-            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 0 30px -10px rgba(59, 130, 246, 0.2);
-        }
-
         /* ── New Badge ── */
         .badge-new {
             display: inline-flex;
@@ -160,13 +141,6 @@
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
         .search-bar::placeholder { color: rgba(148, 163, 184, 0.6); }
-        .light .search-bar {
-            background: rgba(255, 255, 255, 0.85);
-            border-color: rgba(203, 213, 225, 0.6);
-            color: #1e293b;
-        }
-        .light .search-bar::placeholder { color: rgba(100, 116, 139, 0.6); }
-        .light .search-bar:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
 
         /* ── Category Filter Chips ── */
         .chip {
@@ -197,21 +171,6 @@
             color: #60a5fa;
             border-color: rgba(59, 130, 246, 0.3);
         }
-        .light .chip-inactive {
-            background: rgba(241, 245, 249, 0.7);
-            color: #64748b;
-            border-color: rgba(203, 213, 225, 0.6);
-        }
-        .light .chip-inactive:hover {
-            background: rgba(226, 232, 240, 0.9);
-            color: #334155;
-            border-color: rgba(59, 130, 246, 0.2);
-        }
-        .light .chip-active {
-            background: rgba(59, 130, 246, 0.1);
-            color: #2563eb;
-            border-color: rgba(59, 130, 246, 0.3);
-        }
 
         /* ── Stat Counter ── */
         .stat-value {
@@ -222,42 +181,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
-        }
-        .light .stat-value {
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ── Theme Toggle ── */
-        .theme-toggle {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(30, 41, 59, 0.5);
-            border: 1px solid rgba(51, 65, 85, 0.4);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: #94a3b8;
-            font-size: 1.1rem;
-        }
-        .theme-toggle:hover {
-            background: rgba(30, 41, 59, 0.8);
-            border-color: rgba(59, 130, 246, 0.3);
-            color: #e2e8f0;
-        }
-        .light .theme-toggle {
-            background: rgba(241, 245, 249, 0.7);
-            border-color: rgba(203, 213, 225, 0.5);
-            color: #64748b;
-        }
-        .light .theme-toggle:hover {
-            background: rgba(226, 232, 240, 0.9);
-            color: #334155;
         }
 
         /* ── Grid Empty State ── */
@@ -281,10 +204,6 @@
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
-        .light .skeleton {
-            background: linear-gradient(90deg, rgba(203,213,225,0.4) 25%, rgba(226,232,240,0.6) 50%, rgba(203,213,225,0.4) 75%);
-            background-size: 200% 100%;
-        }
 
         /* ── Responsive Typography ── */
         @media (max-width: 640px) {
@@ -293,10 +212,10 @@
         }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
+<body class="bg-gray-950 text-gray-100 min-h-screen">
 
     <!-- ═══ Navbar ═══ -->
-    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
             <a href="./" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
                 <span class="text-2xl">🔧</span>
@@ -308,16 +227,13 @@
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.113.793-.258.793-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.192.694.801.576C20.566 21.797 24 17.3 24 12 24 5.373 18.627 0 12 0z"/></svg>
                     GitHub
                 </a>
-                <button id="themeToggle" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
-                    <span id="themeIcon">🌙</span>
-                </button>
             </div>
         </div>
     </nav>
 
     <!-- ═══ Hero ═══ -->
     <section class="hero-gradient hero-pattern relative overflow-hidden pt-16">
-        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950 light:to-gray-50 pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950 pointer-events-none"></div>
         <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20 sm:pb-24 text-center relative z-10">
             <div class="reveal visible">
                 <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6"
@@ -328,11 +244,11 @@
             </div>
             <h1 class="reveal visible text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-5">
                 Free Tools,<br class="sm:hidden" />
-                <span class="text-transparent bg-clip-text" style="background: linear-gradient(135deg, #60a5fa, #a78bfa);">Zero Compromises</span>
+                <span class="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Zero Compromises</span>
             </h1>
-            <p class="reveal visible reveal-delay-1 text-gray-400 light:text-gray-500 text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
+            <p class="reveal visible reveal-delay-1 text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
                 Privacy-first browser utilities. No servers, no tracking, no ads —
-                everything runs locally on <span class="text-gray-200 light:text-gray-700 font-medium">your</span> device.
+                everything runs locally on <span class="text-gray-200 font-medium">your</span> device.
             </p>
             <div class="reveal visible reveal-delay-2 flex flex-wrap justify-center gap-3 mb-10">
                 <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
@@ -353,15 +269,15 @@
             <div class="reveal visible reveal-delay-3 grid grid-cols-3 gap-6 sm:gap-12 max-w-md mx-auto">
                 <div class="text-center">
                     <div class="stat-value" id="statTools">0</div>
-                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Tools</div>
+                    <div class="text-xs sm:text-sm text-gray-500 mt-1">Tools</div>
                 </div>
                 <div class="text-center">
                     <div class="stat-value">100%</div>
-                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Client-Side</div>
+                    <div class="text-xs sm:text-sm text-gray-500 mt-1">Client-Side</div>
                 </div>
                 <div class="text-center">
                     <div class="stat-value">🔒</div>
-                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Private</div>
+                    <div class="text-xs sm:text-sm text-gray-500 mt-1">Private</div>
                 </div>
             </div>
         </div>
@@ -387,7 +303,7 @@
 
         <!-- Results count -->
         <div class="reveal flex items-center justify-between mb-5">
-            <p id="resultsCount" class="text-sm text-gray-500 light:text-gray-400"></p>
+            <p id="resultsCount" class="text-sm text-gray-500"></p>
         </div>
 
         <!-- Grid -->
@@ -411,13 +327,13 @@
         <!-- Empty state -->
         <div id="emptyState" class="empty-state hidden text-center py-16">
             <div class="text-5xl mb-4">🔍</div>
-            <p class="text-xl font-semibold text-gray-300 light:text-gray-700 mb-2">No tools found</p>
-            <p class="text-sm text-gray-500 light:text-gray-400">Try a different search term or <button onclick="resetFilters()" class="text-blue-400 hover:text-blue-300 underline underline-offset-2 cursor-pointer bg-transparent border-none font-inherit">clear filters</button>.</p>
+            <p class="text-xl font-semibold text-gray-300 mb-2">No tools found</p>
+            <p class="text-sm text-gray-500">Try a different search term or <button onclick="resetFilters()" class="text-blue-400 hover:text-blue-300 underline underline-offset-2 cursor-pointer bg-transparent border-none font-inherit">clear filters</button>.</p>
         </div>
     </section>
 
     <!-- ═══ Footer ═══ -->
-    <footer class="border-t border-gray-800 light:border-gray-200" style="background: rgba(2,6,23,0.6);">
+    <footer class="border-t border-gray-800" style="background: rgba(2,6,23,0.6);">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
             <!-- Top row -->
             <div class="flex flex-col sm:flex-row justify-between gap-6 mb-8">
@@ -425,7 +341,7 @@
                     <div class="flex items-center gap-2 text-lg font-bold mb-2">
                         <span>🔧</span> Vibe-Coded Tools
                     </div>
-                    <p class="text-sm text-gray-500 light:text-gray-400 max-w-sm">
+                    <p class="text-sm text-gray-500 max-w-sm">
                         Free, open-source, privacy-first browser tools. Every tool runs 100% client-side —
                         your data never leaves your device.
                     </p>
@@ -447,16 +363,16 @@
             <!-- AI Disclaimer -->
             <div class="rounded-xl p-4 text-xs leading-relaxed mb-6"
                  style="background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.15); color: rgba(251,191,36,0.9);">
-                <strong class="block mb-1 text-amber-300 light:text-amber-700">⚠️ AI-Generated Content Disclaimer</strong>
+                <strong class="block mb-1 text-amber-300">⚠️ AI-Generated Content Disclaimer</strong>
                 All tools and content on this site are generated by AI with minimum human intervention.
                 The author does not guarantee the correctness, accuracy, or validity of any tool output.
                 If you suspect an error, please review the
-                <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">public source code</a>
+                <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200">public source code</a>
                 and open an issue to report the problem. Use these tools at your own discretion.
             </div>
 
             <!-- Bottom bar -->
-            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-6 border-t border-gray-800 light:border-gray-200 text-xs text-gray-500 light:text-gray-400">
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-6 border-t border-gray-800 text-xs text-gray-500">
                 <span>Made with ❤️ by <a href="https://github.com/kykurniawan" target="_blank" rel="noopener" class="text-gray-400 hover:text-blue-400 transition-colors no-underline">Rizky Kurniawan</a></span>
                 <span>© 2024-2025 Vibe-Coded Tools</span>
             </div>
@@ -480,13 +396,6 @@
             'Developer Tools': { bg: 'rgba(34,197,94,0.12)', text: '#4ade80', border: 'rgba(34,197,94,0.2)' },
             'Conversion': { bg: 'rgba(251,191,36,0.12)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
         };
-        const LIGHT_CATEGORY_COLORS = {
-            'Encoding': { bg: 'rgba(14,165,233,0.08)', text: '#0284c7', border: 'rgba(14,165,233,0.2)' },
-            'Generation': { bg: 'rgba(168,85,247,0.08)', text: '#7c3aed', border: 'rgba(168,85,247,0.2)' },
-            'Security': { bg: 'rgba(239,68,68,0.08)', text: '#dc2626', border: 'rgba(239,68,68,0.2)' },
-            'Developer Tools': { bg: 'rgba(34,197,94,0.08)', text: '#16a34a', border: 'rgba(34,197,94,0.2)' },
-            'Conversion': { bg: 'rgba(251,191,36,0.08)', text: '#d97706', border: 'rgba(251,191,36,0.2)' },
-        };
 
         // Mark which tools are "new" (by ID)
         const NEW_TOOL_IDS = new Set(['jwt-decoder', 'timestamp-converter']);
@@ -503,18 +412,6 @@
         let allTools = [];
         let activeCategory = 'all';
         let searchQuery = '';
-
-        // ─── Theme Toggle ───
-        const themeToggle = document.getElementById('themeToggle');
-        const themeIcon = document.getElementById('themeIcon');
-        themeToggle.addEventListener('click', () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            document.documentElement.classList.toggle('light', !isDark);
-            themeIcon.textContent = isDark ? '🌙' : '☀️';
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            // Re-render category colors
-            renderCategoryChips();
-        });
 
         // ─── Fetch & Render ───
         (async () => {
@@ -591,8 +488,7 @@
 
         // ─── Render ───
         function renderTools() {
-            const isDark = document.documentElement.classList.contains('dark');
-            const colorMap = isDark ? CATEGORY_COLORS : LIGHT_CATEGORY_COLORS;
+            const colorMap = CATEGORY_COLORS;
 
             let filtered = allTools.filter(t => {
                 const catMatch = activeCategory === 'all' || CATEGORY_MAP[t.id] === activeCategory;
@@ -622,8 +518,8 @@
                                 <div class="text-3xl">${t.icon || '🔧'}</div>
                                 ${isNew ? `<span class="badge-new">New</span>` : ''}
                             </div>
-                            <h3 class="font-semibold text-base sm:text-lg mb-1.5 text-gray-100 group-hover:text-blue-300 transition-colors light:text-gray-900 light:group-hover:text-blue-600">${t.name}</h3>
-                            <p class="text-sm text-gray-400 light:text-gray-500 leading-relaxed mb-3">${t.description}</p>
+                            <h3 class="font-semibold text-base sm:text-lg mb-1.5 text-gray-100 group-hover:text-blue-300 transition-colors">${t.name}</h3>
+                            <p class="text-sm text-gray-400 leading-relaxed mb-3">${t.description}</p>
                             <span class="category-tag" style="background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border};">${category}</span>
                         </a>
                     `;
@@ -632,20 +528,6 @@
 
             // Observe new cards for scroll animation
             observeReveals();
-        }
-
-        function renderCategoryChips() {
-            // Re-render chips with correct colors for current theme
-            document.querySelectorAll('.chip').forEach(chip => {
-                const cat = chip.dataset.category;
-                if (cat === activeCategory && cat === chip.dataset.category) {
-                    // keep active class
-                } else if (cat === 'all' && activeCategory === 'all') {
-                    chip.className = 'chip chip-active';
-                } else {
-                    chip.className = 'chip chip-inactive';
-                }
-            });
         }
 
         // ─── Scroll Reveal ───
