@@ -86,7 +86,7 @@
             const loading = document.getElementById('tools-loading');
 
             try {
-                const res = await fetch('/tools.json');
+                const res = await fetch('tools.json');
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
 
