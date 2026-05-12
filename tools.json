@@ -4,22 +4,29 @@
       "id": "base64",
       "name": "Base64 Encoder / Decoder",
       "description": "Encode text to Base64 or decode Base64 strings back to readable text. Supports UTF-8 and ASCII.",
-      "icon": "🔐",
+      "icon": "\ud83d\udd10",
       "path": "/base64/"
     },
     {
       "id": "uuid-generator",
       "name": "UUID Generator",
       "description": "Generate UUID v4 (random) and UUID v7 (time-ordered) with bulk generation and copy-to-clipboard.",
-      "icon": "🆔",
+      "icon": "\ud83c\udd94",
       "path": "/uuid-generator/"
     },
     {
       "id": "hash-generator",
       "name": "Hash Generator",
       "description": "Generate SHA-1, SHA-256, SHA-384, SHA-512 and MD5 hashes from any text input using browser-native crypto.",
-      "icon": "#️⃣",
+      "icon": "#\ufe0f\u20e3",
       "path": "/hash-generator/"
+    },
+    {
+      "id": "json-formatter",
+      "name": "JSON Formatter & Validator",
+      "description": "Format, validate, and minify JSON. Beautify messy JSON with syntax highlighting and line numbers.",
+      "icon": "\ud83d\udccb",
+      "path": "/json-formatter/"
     }
   ]
 }
