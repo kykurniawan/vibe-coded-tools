@@ -1,192 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hash Generator — Vibe-Coded Tools</title>
-    <meta name="description" content="Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text. Uses the Web Crypto API for SHA hashes." />
+    <meta name="description" content="Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text. Uses the Web Crypto API." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>#️⃣</text></svg>" />
+    <script>
+        (() => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') document.documentElement.classList.remove('dark');
+            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
+                document.documentElement.classList.add('dark');
+        })();
+    </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+        }
         textarea { resize: vertical; }
-        .hash-output { @apply font-mono text-xs break-all bg-gray-50 dark:bg-gray-850 px-3 py-2 rounded border border-gray-200 dark:border-gray-700 select-all; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+        .light .back-link { color: rgba(71,85,105,0.8); background: rgba(241,245,249,0.5); }
+        .light .back-link:hover { color: #2563eb; background: rgba(219,234,254,0.5); border-color: rgba(59,130,246,0.2); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+        .light .tool-card-surface { background: rgba(255,255,255,0.7); border-color: rgba(203,213,225,0.5); }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .light .tool-input { background: rgba(248,250,252,0.8); border-color: rgba(203,213,225,0.6); color: #1e293b; }
+        .light .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+        .light .tool-input::placeholder { color: rgba(148,163,184,0.7); }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.4); color: #cbd5e1; }
+        .btn-secondary:hover { background: rgba(30,41,59,0.8); border-color: rgba(59,130,246,0.2); color: #e2e8f0; }
+        .light .btn-secondary { background: rgba(241,245,249,0.7); border-color: rgba(203,213,225,0.5); color: #475569; }
+        .light .btn-secondary:hover { background: rgba(219,234,254,0.5); border-color: rgba(59,130,246,0.2); color: #1e293b; }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+        .light .btn-ghost { color: rgba(100,116,139,0.7); border-color: rgba(203,213,225,0.4); }
+        .light .btn-ghost:hover { background: rgba(241,245,249,0.6); color: #64748b; }
+
+        .hash-row {
+            background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3);
+            border-radius: 12px; padding: 0.875rem 1rem;
+            transition: border-color 0.2s ease;
+        }
+        .hash-row:hover { border-color: rgba(59,130,246,0.15); }
+        .light .hash-row { background: rgba(248,250,252,0.4); border-color: rgba(203,213,225,0.4); }
+        .light .hash-row:hover { border-color: rgba(59,130,246,0.15); }
+        .hash-output { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.75rem; word-break: break-all; user-select: all; cursor: pointer; padding: 0.375rem 0; line-height: 1.6; }
+
+        .status-msg { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.8rem; line-height: 1.5; }
+        .status-msg.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); color: #60a5fa; }
+        .status-msg.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15); color: #34d399; }
+        .light .status-msg.info { background: rgba(59,130,246,0.06); color: #2563eb; border-color: rgba(59,130,246,0.15); }
+        .light .status-msg.success { background: rgba(16,185,129,0.06); color: #16a34a; border-color: rgba(16,185,129,0.15); }
+
+        details.tool-details summary { cursor: pointer; font-weight: 500; transition: color 0.2s ease; color: rgba(148,163,184,0.8); }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+        .light details.tool-details summary { color: rgba(71,85,105,0.8); }
+        .light details.tool-details summary:hover { color: #2563eb; }
+        .light details.tool-details[open] summary { color: #2563eb; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+        .light .footer-disc { background: rgba(217,119,6,0.04); color: rgba(180,83,9,0.8); border-color: rgba(217,119,6,0.12); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
 
-    <div class="max-w-3xl mx-auto px-4 py-10">
-        <!-- Breadcrumb -->
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <a href="../" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
-            <span class="mx-2">/</span>
-            <span class="text-gray-700 dark:text-gray-300">Hash Generator</span>
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <button id="themeToggle" class="btn-ghost text-base px-3 py-2" title="Toggle theme" aria-label="Toggle theme"><span id="themeIcon">🌙</span></button>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">#️⃣ Hash Generator</h1>
+            <p class="text-gray-400 light:text-gray-500 text-base leading-relaxed">
+                Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text input.
+                SHA hashes use the browser's native <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">SubtleCrypto</code> API.
+            </p>
         </div>
 
-        <h1 class="text-3xl font-bold tracking-tight mb-2">#️⃣ Hash Generator</h1>
-        <p class="text-gray-500 dark:text-gray-400 mb-8">Generate MD5, SHA-1, SHA-256, SHA-384, and SHA-512 hashes from any text input. SHA hashes use the browser's native <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">SubtleCrypto</code> API.</p>
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <!-- Input -->
+            <div class="mb-5">
+                <label class="block text-sm font-medium mb-2 text-gray-300 light:text-gray-700">Input Text</label>
+                <textarea id="input" rows="4" class="tool-input" placeholder="Type or paste text to hash…" oninput="computeAll()"></textarea>
+            </div>
 
-        <!-- Input -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Input Text</label>
-            <textarea id="input" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="Type or paste text to hash…" oninput="computeAll()"></textarea>
+            <!-- Batch actions -->
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+                <label class="text-sm font-medium text-gray-300 light:text-gray-700">File:</label>
+                <label class="btn-secondary cursor-pointer text-sm">
+                    📂 Hash File
+                    <input type="file" id="fileInput" class="hidden" onchange="hashFile(this)" />
+                </label>
+                <button onclick="clearAll()" class="btn-secondary">✕ Clear</button>
+                <span id="inputInfo" class="text-xs text-gray-500 light:text-gray-400"></span>
+            </div>
+
+            <!-- Hash results -->
+            <div id="results" class="space-y-2.5">
+                <div class="hash-row" data-algorithm="MD5">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-mono text-sm font-semibold text-gray-200 light:text-gray-800 w-20">MD5</span>
+                        <span class="text-xs text-gray-500">128-bit</span>
+                        <button onclick="copyHash('MD5')" class="ml-auto btn-ghost">📋 Copy</button>
+                    </div>
+                    <div id="hash-MD5" class="hash-output text-gray-500 italic">Waiting for input…</div>
+                </div>
+                <div class="hash-row" data-algorithm="SHA-1">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-mono text-sm font-semibold text-gray-200 light:text-gray-800 w-20">SHA-1</span>
+                        <span class="text-xs text-gray-500">160-bit</span>
+                        <button onclick="copyHash('SHA-1')" class="ml-auto btn-ghost">📋 Copy</button>
+                    </div>
+                    <div id="hash-SHA-1" class="hash-output text-gray-500 italic">Waiting for input…</div>
+                </div>
+                <div class="hash-row" data-algorithm="SHA-256">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-mono text-sm font-semibold text-gray-200 light:text-gray-800 w-20">SHA-256</span>
+                        <span class="text-xs text-gray-500">256-bit</span>
+                        <button onclick="copyHash('SHA-256')" class="ml-auto btn-ghost">📋 Copy</button>
+                    </div>
+                    <div id="hash-SHA-256" class="hash-output text-gray-500 italic">Waiting for input…</div>
+                </div>
+                <div class="hash-row" data-algorithm="SHA-384">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-mono text-sm font-semibold text-gray-200 light:text-gray-800 w-20">SHA-384</span>
+                        <span class="text-xs text-gray-500">384-bit</span>
+                        <button onclick="copyHash('SHA-384')" class="ml-auto btn-ghost">📋 Copy</button>
+                    </div>
+                    <div id="hash-SHA-384" class="hash-output text-gray-500 italic">Waiting for input…</div>
+                </div>
+                <div class="hash-row" data-algorithm="SHA-512">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-mono text-sm font-semibold text-gray-200 light:text-gray-800 w-20">SHA-512</span>
+                        <span class="text-xs text-gray-500">512-bit</span>
+                        <button onclick="copyHash('SHA-512')" class="ml-auto btn-ghost">📋 Copy</button>
+                    </div>
+                    <div id="hash-SHA-512" class="hash-output text-gray-500 italic">Waiting for input…</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Batch action -->
-        <div class="flex flex-wrap items-center gap-3 mb-6">
-            <label class="text-sm font-medium">File:</label>
-            <label class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm cursor-pointer transition-colors">
-                📂 Hash File
-                <input type="file" id="fileInput" class="hidden" onchange="hashFile(this)" />
-            </label>
-            <button onclick="clearAll()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">✕ Clear</button>
-            <span id="inputInfo" class="text-xs text-gray-400"></span>
-        </div>
-
-        <!-- Hash results -->
-        <div id="results" class="space-y-3">
-            <div class="hash-row" data-algorithm="MD5">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">MD5</span>
-                    <span class="text-xs text-gray-400">128-bit</span>
-                    <button onclick="copyHash('MD5')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
-                </div>
-                <div id="hash-MD5" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
-            </div>
-            <div class="hash-row" data-algorithm="SHA-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-1</span>
-                    <span class="text-xs text-gray-400">160-bit</span>
-                    <button onclick="copyHash('SHA-1')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
-                </div>
-                <div id="hash-SHA-1" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
-            </div>
-            <div class="hash-row" data-algorithm="SHA-256">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-256</span>
-                    <span class="text-xs text-gray-400">256-bit</span>
-                    <button onclick="copyHash('SHA-256')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
-                </div>
-                <div id="hash-SHA-256" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
-            </div>
-            <div class="hash-row" data-algorithm="SHA-384">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-384</span>
-                    <span class="text-xs text-gray-400">384-bit</span>
-                    <button onclick="copyHash('SHA-384')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
-                </div>
-                <div id="hash-SHA-384" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
-            </div>
-            <div class="hash-row" data-algorithm="SHA-512">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="font-mono text-sm font-semibold text-gray-700 dark:text-gray-300 w-20">SHA-512</span>
-                    <span class="text-xs text-gray-400">512-bit</span>
-                    <button onclick="copyHash('SHA-512')" class="ml-auto text-xs text-gray-400 hover:text-blue-600 dark:hover:text-blue-400">📋 Copy</button>
-                </div>
-                <div id="hash-SHA-512" class="hash-output text-gray-500 italic text-xs">Waiting for input…</div>
-            </div>
-        </div>
-
-        <!-- Info -->
-        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
-            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About Hash Algorithms</summary>
-            <div class="mt-2 space-y-2 leading-relaxed">
-                <p><strong>MD5</strong> — 128-bit hash. Fast but cryptographically broken. Use for checksums, not security.</p>
-                <p><strong>SHA-1</strong> — 160-bit hash. Deprecated for security, but still used in Git and legacy systems.</p>
-                <p><strong>SHA-256</strong> — 256-bit hash. Part of the SHA-2 family. Industry standard for TLS, certificates, blockchain.</p>
-                <p><strong>SHA-384</strong> — 384-bit hash. Truncated SHA-512 variant. Used in higher-security contexts.</p>
-                <p><strong>SHA-512</strong> — 512-bit hash. Strongest in the SHA-2 family. Slower but more resistant to collision attacks.</p>
-                <p class="mt-2 text-xs text-gray-400">MD5 is implemented in pure JavaScript. SHA hashes use the <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">Web Crypto API (SubtleCrypto)</code>.</p>
+        <details class="tool-details mt-6 text-sm fade-in-delay-3">
+            <summary class="px-1 py-2">About Hash Algorithms</summary>
+            <div class="mt-3 px-1 space-y-2 leading-relaxed text-gray-400 light:text-gray-500">
+                <p><strong class="text-gray-200 light:text-gray-800">MD5</strong> — 128-bit hash. Fast but cryptographically broken. Use for checksums, not security.</p>
+                <p><strong class="text-gray-200 light:text-gray-800">SHA-1</strong> — 160-bit hash. Deprecated for security, but still used in Git and legacy systems.</p>
+                <p><strong class="text-gray-200 light:text-gray-800">SHA-256</strong> — 256-bit hash. Part of the SHA-2 family. Industry standard for TLS, certificates, blockchain.</p>
+                <p><strong class="text-gray-200 light:text-gray-800">SHA-384</strong> — 384-bit hash. Truncated SHA-512 variant. Used in higher-security contexts.</p>
+                <p><strong class="text-gray-200 light:text-gray-800">SHA-512</strong> — 512-bit hash. Strongest in the SHA-2 family. Slower but more resistant to collision attacks.</p>
+                <p class="mt-2 text-xs text-gray-500">MD5 is implemented in pure JavaScript. SHA hashes use the <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">Web Crypto API (SubtleCrypto)</code>.</p>
             </div>
         </details>
 
-        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/hash-generator" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/hash-generator" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">View source</a>
         </div>
     </div>
 
     <script>
-        // ─── MD5 Implementation (pure JS, no dependencies) ──────────────────────
+        // ─── MD5 Implementation ───────────────────────────────────────────────
         const MD5 = (() => {
             const md5cycle = (x, k) => {
-                let a = x[0], b = x[1], c = x[2], d = x[3];
-                const cm = (q, a, b, x, s, t) => {
-                    const f = (q < 4)
-                        ? ((b & c) | (~b & d))
-                        : (q < 8)
-                            ? ((b & d) | (c & ~d))
-                            : (q < 12)
-                                ? (b ^ c ^ d)
-                                : (c ^ (b | ~d));
-                    const idx = [
-                        [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
-                        [1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12],
-                        [5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2],
-                        [0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9]
-                    ][q >> 2];
-                    const sft = [7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21][q % 16 * 2 + (q >> 4)];
-                    return ((a + f + k[idx[q % 16]] + t) << sft | (a + f + k[idx[q % 16]] + t) >>> (32 - sft)) + b | 0;
-                };
-                const T = [
-                    0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,
-                    0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,
-                    0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,
-                    0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,
-                    0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,
-                    0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,
-                    0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,
-                    0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391
-                ];
-                for (let i = 0; i < 64; i++) {
-                    const q = i >> 4;
-                    const r = i % 16;
-                    const f = q === 0 ? ((b & c) | (~b & d))
-                        : q === 1 ? ((b & d) | (c & ~d))
-                        : q === 2 ? (b ^ c ^ d)
-                        : (c ^ (b | ~d));
-                    const g = q === 0 ? r
-                        : q === 1 ? (5 * r + 1) % 16
-                        : q === 2 ? (3 * r + 5) % 16
-                        : (7 * r) % 16;
-                    const sft = [7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21][q * 4 + (r >> 2)];
-                    const oldA = a;
-                    a = (b + ((a + f + k[g] + T[i]) << sft | (a + f + k[g] + T[i]) >>> (32 - sft))) | 0;
-                    d = c; c = b; b = oldA;
+                let a=x[0],b=x[1],c=x[2],d=x[3];
+                for (let i=0;i<64;i++) {
+                    const q=i>>4, r=i%16;
+                    const f=q===0?((b&c)|(~b&d)):q===1?((b&d)|(c&~d)):q===2?(b^c^d):(c^(b|~d));
+                    const g=q===0?r:q===1?(5*r+1)%16:q===2?(3*r+5)%16:(7*r)%16;
+                    const sft=[7,12,17,22,5,9,14,20,4,11,16,23,6,10,15,21][q*4+(r>>2)];
+                    const T=[0xd76aa478,0xe8c7b756,0x242070db,0xc1bdceee,0xf57c0faf,0x4787c62a,0xa8304613,0xfd469501,0x698098d8,0x8b44f7af,0xffff5bb1,0x895cd7be,0x6b901122,0xfd987193,0xa679438e,0x49b40821,0xf61e2562,0xc040b340,0x265e5a51,0xe9b6c7aa,0xd62f105d,0x02441453,0xd8a1e681,0xe7d3fbc8,0x21e1cde6,0xc33707d6,0xf4d50d87,0x455a14ed,0xa9e3e905,0xfcefa3f8,0x676f02d9,0x8d2a4c8a,0xfffa3942,0x8771f681,0x6d9d6122,0xfde5380c,0xa4beea44,0x4bdecfa9,0xf6bb4b60,0xbebfbc70,0x289b7ec6,0xeaa127fa,0xd4ef3085,0x04881d05,0xd9d4d039,0xe6db99e5,0x1fa27cf8,0xc4ac5665,0xf4292244,0x432aff97,0xab9423a7,0xfc93a039,0x655b59c3,0x8f0ccc92,0xffeff47d,0x85845dd1,0x6fa87e4f,0xfe2ce6e0,0xa3014314,0x4e0811a1,0xf7537e82,0xbd3af235,0x2ad7d2bb,0xeb86d391];
+                    const oldA=a;
+                    a=(b+((a+f+k[g]+T[i])<<sft|(a+f+k[g]+T[i])>>>(32-sft)))|0;
+                    d=c;c=b;b=oldA;
                 }
-                x[0] = (a + x[0]) | 0; x[1] = (b + x[1]) | 0; x[2] = (c + x[2]) | 0; x[3] = (d + x[3]) | 0;
+                x[0]=(a+x[0])|0;x[1]=(b+x[1])|0;x[2]=(c+x[2])|0;x[3]=(d+x[3])|0;
             };
-
-            const strToBytes = (s) => {
-                const bytes = [];
-                for (let i = 0; i < s.length; i++) {
-                    let c = s.charCodeAt(i);
-                    if (c < 0x80) bytes.push(c);
-                    else if (c < 0x800) { bytes.push(0xc0 | (c >> 6)); bytes.push(0x80 | (c & 0x3f)); }
-                    else if (c < 0xd800 || c >= 0xe000) { bytes.push(0xe0 | (c >> 12)); bytes.push(0x80 | ((c >> 6) & 0x3f)); bytes.push(0x80 | (c & 0x3f)); }
-                    else { i++; c = 0x10000 + ((c & 0x3ff) << 10) | (s.charCodeAt(i) & 0x3ff); bytes.push(0xf0 | (c >> 18)); bytes.push(0x80 | ((c >> 12) & 0x3f)); bytes.push(0x80 | ((c >> 6) & 0x3f)); bytes.push(0x80 | (c & 0x3f)); }
-                }
-                return bytes;
-            };
-
-            return (s) => {
-                const bytes = strToBytes(s);
-                const len = bytes.length * 8;
-                const padded = [...bytes, 0x80];
-                while ((padded.length * 8) % 512 !== 448) padded.push(0);
-                for (let i = 0; i < 8; i++) padded.push((len >>> (i * 8)) & 0xff);
-
-                let h = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476];
-                for (let i = 0; i < padded.length; i += 64) {
-                    const chunk = padded.slice(i, i + 64);
-                    const words = [];
-                    for (let j = 0; j < 64; j += 4) words.push(chunk[j] | (chunk[j+1] << 8) | (chunk[j+2] << 16) | (chunk[j+3] << 24));
-                    md5cycle(h, words);
-                }
-                return h.map(i => (i >>> 0).toString(16).padStart(8, '0')).join('');
-            };
+            const strToBytes=(s)=>{const b=[];for(let i=0;i<s.length;i++){let c=s.charCodeAt(i);if(c<0x80)b.push(c);else if(c<0x800){b.push(0xc0|(c>>6));b.push(0x80|(c&0x3f));}else if(c<0xd800||c>=0xe000){b.push(0xe0|(c>>12));b.push(0x80|((c>>6)&0x3f));b.push(0x80|(c&0x3f));}else{i++;c=0x10000+((c&0x3ff)<<10)|(s.charCodeAt(i)&0x3ff);b.push(0xf0|(c>>18));b.push(0x80|((c>>12)&0x3f));b.push(0x80|((c>>6)&0x3f));b.push(0x80|(c&0x3f));}}return b;};
+            return (s)=>{const bytes=strToBytes(s);const len=bytes.length*8;const padded=[...bytes,0x80];while((padded.length*8)%512!==448)padded.push(0);for(let i=0;i<8;i++)padded.push((len>>>(i*8))&0xff);let h=[0x67452301,0xefcdab89,0x98badcfe,0x10325476];for(let i=0;i<padded.length;i+=64){const chunk=padded.slice(i,i+64);const words=[];for(let j=0;j<64;j+=4)words.push(chunk[j]|(chunk[j+1]<<8)|(chunk[j+2]<<16)|(chunk[j+3]<<24));md5cycle(h,words);}return h.map(i=>(i>>>0).toString(16).padStart(8,'0')).join('');};
         })();
 
-        // ─── SHA (SubtleCrypto) ──────────────────────────────────────────────
+        // ─── SHA ────────────────────────────────────────────────────────────
         async function shaHash(algorithm, text) {
             const encoder = new TextEncoder();
             const data = encoder.encode(text);
@@ -195,7 +227,7 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        // ─── UI ──────────────────────────────────────────────────────────────
+        // ─── UI ─────────────────────────────────────────────────────────────
         const input = document.getElementById('input');
         const inputInfo = document.getElementById('inputInfo');
 
@@ -205,17 +237,16 @@
 
             if (!text) {
                 ['MD5','SHA-1','SHA-256','SHA-384','SHA-512'].forEach(algo => {
-                    document.getElementById(`hash-${algo}`).textContent = 'Waiting for input…';
-                    document.getElementById(`hash-${algo}`).className = 'hash-output text-gray-500 italic text-xs';
+                    const el = document.getElementById(`hash-${algo}`);
+                    el.textContent = 'Waiting for input…';
+                    el.className = 'hash-output text-gray-500 italic';
                 });
                 return;
             }
 
-            // MD5 (sync)
             document.getElementById('hash-MD5').textContent = MD5(text);
-            document.getElementById('hash-MD5').className = 'hash-output';
+            document.getElementById('hash-MD5').className = 'hash-output text-gray-200 light:text-gray-800';
 
-            // SHA (async)
             const shaAlgos = [
                 { name: 'SHA-1',   el: 'SHA-1' },
                 { name: 'SHA-256', el: 'SHA-256' },
@@ -224,22 +255,23 @@
             ];
 
             for (const { name, el } of shaAlgos) {
-                document.getElementById(`hash-${el}`).textContent = 'Computing…';
-                document.getElementById(`hash-${el}`).className = 'hash-output text-gray-400 text-xs';
+                const elm = document.getElementById(`hash-${el}`);
+                elm.textContent = 'Computing…';
+                elm.className = 'hash-output text-gray-400';
             }
 
-            const promises = shaAlgos.map(async ({ name, el }) => {
+            await Promise.all(shaAlgos.map(async ({ name, el }) => {
                 try {
                     const hash = await shaHash(name, text);
-                    document.getElementById(`hash-${el}`).textContent = hash;
-                    document.getElementById(`hash-${el}`).className = 'hash-output';
+                    const elm = document.getElementById(`hash-${el}`);
+                    elm.textContent = hash;
+                    elm.className = 'hash-output text-gray-200 light:text-gray-800';
                 } catch (e) {
-                    document.getElementById(`hash-${el}`).textContent = `Error: ${e.message}`;
-                    document.getElementById(`hash-${el}`).className = 'hash-output text-red-500';
+                    const elm = document.getElementById(`hash-${el}`);
+                    elm.textContent = `Error: ${e.message}`;
+                    elm.className = 'hash-output text-red-400 light:text-red-600';
                 }
-            });
-
-            await Promise.all(promises);
+            }));
         }
 
         function copyHash(algo) {
@@ -255,7 +287,6 @@
             computeAll();
         }
 
-        // File hashing
         async function hashFile(fileInput) {
             const file = fileInput.files[0];
             if (!file) return;
@@ -270,11 +301,15 @@
             fileInput.value = '';
         }
 
-        // Dark mode
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light', !isDark);
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,74 +7,328 @@
     <meta name="description" content="Encode text to Base64 or decode Base64 strings. Runs entirely in your browser." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+    <script>
+        (() => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') document.documentElement.classList.remove('dark');
+            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
+                document.documentElement.classList.add('dark');
+        })();
+    </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
         textarea { resize: vertical; }
-        .copy-btn { @apply absolute top-3 right-3 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded border border-gray-200 dark:border-gray-700; }
+
+        /* ── Back Link ── */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgba(148, 163, 184, 0.8);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid transparent;
+        }
+        .back-link:hover {
+            color: #60a5fa;
+            background: rgba(30, 41, 59, 0.6);
+            border-color: rgba(59, 130, 246, 0.15);
+        }
+        .light .back-link {
+            color: rgba(71, 85, 105, 0.8);
+            background: rgba(241, 245, 249, 0.5);
+        }
+        .light .back-link:hover {
+            color: #2563eb;
+            background: rgba(219, 234, 254, 0.5);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+        /* ── Card Surface ── */
+        .tool-card-surface {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+            border-radius: 16px;
+            transition: border-color 0.2s ease;
+        }
+        .light .tool-card-surface {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+
+        /* ── Input / Textarea ── */
+        .tool-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+            outline: none;
+            transition: all 0.2s ease;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            color: #e2e8f0;
+        }
+        .tool-input:focus {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        }
+        .tool-input::placeholder { color: rgba(100, 116, 139, 0.6); }
+        .tool-input:read-only { cursor: default; }
+        .light .tool-input {
+            background: rgba(248, 250, 252, 0.8);
+            border-color: rgba(203, 213, 225, 0.6);
+            color: #1e293b;
+        }
+        .light .tool-input:focus {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+        .light .tool-input::placeholder { color: rgba(148, 163, 184, 0.7); }
+
+        /* ── Buttons ── */
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: white;
+            box-shadow: 0 2px 12px -4px rgba(59, 130, 246, 0.3);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            box-shadow: 0 4px 20px -4px rgba(59, 130, 246, 0.4);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            border-radius: 10px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+            color: #cbd5e1;
+        }
+        .btn-secondary:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #e2e8f0;
+        }
+        .light .btn-secondary {
+            background: rgba(241, 245, 249, 0.7);
+            border-color: rgba(203, 213, 225, 0.5);
+            color: #475569;
+        }
+        .light .btn-secondary:hover {
+            background: rgba(219, 234, 254, 0.5);
+            border-color: rgba(59, 130, 246, 0.2);
+            color: #1e293b;
+        }
+
+        .btn-ghost {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: transparent;
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            color: rgba(148, 163, 184, 0.7);
+        }
+        .btn-ghost:hover {
+            background: rgba(30, 41, 59, 0.4);
+            color: #94a3b8;
+            border-color: rgba(51, 65, 85, 0.5);
+        }
+        .light .btn-ghost {
+            color: rgba(100, 116, 139, 0.7);
+            border-color: rgba(203, 213, 225, 0.4);
+        }
+        .light .btn-ghost:hover {
+            background: rgba(241, 245, 249, 0.6);
+            color: #64748b;
+        }
+
+        /* ── Status / Error ── */
+        .status-msg {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+        .status-msg.info {
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+        }
+        .status-msg.error {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.15);
+            color: #f87171;
+        }
+        .status-msg.success {
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.15);
+            color: #34d399;
+        }
+        .light .status-msg.info { background: rgba(59,130,246,0.06); color: #2563eb; border-color: rgba(59,130,246,0.15); }
+        .light .status-msg.error { background: rgba(239,68,68,0.06); color: #dc2626; border-color: rgba(239,68,68,0.15); }
+        .light .status-msg.success { background: rgba(16,185,129,0.06); color: #16a34a; border-color: rgba(16,185,129,0.15); }
+
+        /* ── Details ── */
+        details.tool-details summary {
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.2s ease;
+            color: rgba(148, 163, 184, 0.8);
+        }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+        .light details.tool-details summary { color: rgba(71, 85, 105, 0.8); }
+        .light details.tool-details summary:hover { color: #2563eb; }
+        .light details.tool-details[open] summary { color: #2563eb; }
+
+        /* ── Footer disclaimer ── */
+        .footer-disc {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            line-height: 1.5;
+            background: rgba(217,119,6,0.06);
+            border: 1px solid rgba(217,119,6,0.12);
+            color: rgba(251,191,36,0.8);
+        }
+        .light .footer-disc {
+            background: rgba(217,119,6,0.04);
+            color: rgba(180, 83, 9, 0.8);
+            border-color: rgba(217,119,6,0.12);
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.6); }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
 
-    <div class="max-w-3xl mx-auto px-4 py-10">
-        <!-- Breadcrumb -->
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <a href="../" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
-            <span class="mx-2">/</span>
-            <span class="text-gray-700 dark:text-gray-300">Base64 Encoder / Decoder</span>
+    <!-- ═══ Navbar ═══ -->
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <button id="themeToggle" class="btn-ghost text-base px-3 py-2" title="Toggle theme" aria-label="Toggle theme">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══ Main Content ═══ -->
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <!-- Back link -->
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <!-- Header -->
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🔐 Base64 Encoder / Decoder</h1>
+            <p class="text-gray-400 light:text-gray-500 text-base leading-relaxed">
+                Encode text to Base64 or decode Base64 strings back to readable text.
+                All processing is done in your browser — nothing is uploaded.
+            </p>
         </div>
 
-        <h1 class="text-3xl font-bold tracking-tight mb-2">🔐 Base64 Encoder / Decoder</h1>
-        <p class="text-gray-500 dark:text-gray-400 mb-8">Encode text to Base64 or decode Base64 strings. All processing is done in your browser — nothing is uploaded.</p>
-
-        <!-- Input -->
-        <div class="mb-6">
-            <label class="block text-sm font-medium mb-2">Input</label>
-            <div class="relative">
-                <textarea id="input" rows="6" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="Type or paste your text here…"></textarea>
+        <!-- Tool Surface -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <!-- Input -->
+            <div class="mb-5">
+                <label class="block text-sm font-medium mb-2 text-gray-300 light:text-gray-700">Input</label>
+                <textarea id="input" rows="6" class="tool-input" placeholder="Type or paste your text here…"></textarea>
             </div>
-        </div>
 
-        <!-- Action buttons -->
-        <div class="flex flex-wrap gap-3 mb-8">
-            <button onclick="encode()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors">⬇ Encode to Base64</button>
-            <button onclick="decode()" class="px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium text-sm transition-colors">⬆ Decode from Base64</button>
-            <button onclick="swap()" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">⇄ Swap</button>
-            <button onclick="clearAll()" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">✕ Clear</button>
-        </div>
-
-        <!-- Output -->
-        <div class="mb-4">
-            <label class="block text-sm font-medium mb-2">Output</label>
-            <div class="relative">
-                <textarea id="output" rows="6" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" readonly placeholder="Result will appear here…" onclick="this.select()"></textarea>
-                <button onclick="copyOutput()" class="copy-btn" title="Copy to clipboard">📋 Copy</button>
+            <!-- Action buttons -->
+            <div class="flex flex-wrap gap-2.5 mb-5">
+                <button onclick="encode()" class="btn-primary">⬇ Encode to Base64</button>
+                <button onclick="decode()" class="btn-secondary">⬆ Decode from Base64</button>
+                <button onclick="swap()" class="btn-secondary">⇄ Swap</button>
+                <button onclick="clearAll()" class="btn-secondary">✕ Clear</button>
             </div>
+
+            <!-- Output -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm font-medium text-gray-300 light:text-gray-700">Output</label>
+                    <button onclick="copyOutput()" class="btn-ghost" title="Copy to clipboard">📋 Copy</button>
+                </div>
+                <textarea id="output" rows="6" class="tool-input" readonly placeholder="Result will appear here…" onclick="this.select()"></textarea>
+            </div>
+
+            <!-- Status / Error -->
+            <div id="status" class="hidden"></div>
+            <div id="error" class="hidden"></div>
         </div>
-
-        <!-- Status / error -->
-        <div id="status" class="text-sm text-gray-500 dark:text-gray-400 mb-4 hidden"></div>
-
-        <!-- Error display -->
-        <div id="error" class="text-sm text-red-600 dark:text-red-400 mb-4 hidden"></div>
 
         <!-- Info -->
-        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
-            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About Base64</summary>
-            <div class="mt-2 space-y-1 leading-relaxed">
+        <details class="tool-details mt-6 text-sm fade-in-delay-3">
+            <summary class="px-1 py-2">About Base64</summary>
+            <div class="mt-3 px-1 space-y-2 leading-relaxed text-gray-400 light:text-gray-500">
                 <p>Base64 is a binary-to-text encoding scheme that represents binary data in an ASCII string format. It's commonly used for:</p>
-                <ul class="list-disc list-inside mt-1 space-y-0.5">
+                <ul class="list-disc list-inside space-y-1 pl-2">
                     <li>Embedding images (data URIs) in HTML/CSS</li>
                     <li>Encoding email attachments (MIME)</li>
                     <li>Storing binary data in JSON or databases</li>
                     <li>Authentication headers (Basic Auth)</li>
                 </ul>
-                <p class="mt-2">This tool uses the standard Base64 alphabet with <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">+</code> and <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">/</code> characters and <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded">=</code> padding.</p>
+                <p class="mt-2">This tool uses the standard Base64 alphabet with <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">+</code> and <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">/</code> characters and <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">=</code> padding.</p>
             </div>
         </details>
 
         <!-- Footer disclaimer -->
-        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/base64" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/base64" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">View source</a>
         </div>
     </div>
 
@@ -84,15 +338,15 @@
         const status = document.getElementById('status');
         const error  = document.getElementById('error');
 
-        function showStatus(msg) {
+        function showStatus(msg, type = 'info') {
             status.textContent = msg;
-            status.classList.remove('hidden');
+            status.className = `status-msg ${type} fade-in`;
             error.classList.add('hidden');
         }
 
         function showError(msg) {
             error.textContent = msg;
-            error.classList.remove('hidden');
+            error.className = 'status-msg error fade-in';
             status.classList.add('hidden');
         }
 
@@ -104,10 +358,10 @@
         function encode() {
             hideMessages();
             const text = input.value;
-            if (!text) { output.value = ''; showStatus('Enter some text first.'); return; }
+            if (!text) { output.value = ''; showStatus('Enter some text first.', 'info'); return; }
             try {
                 output.value = btoa(unescape(encodeURIComponent(text)));
-                showStatus(`Encoded ${text.length} characters → ${output.value.length} characters`);
+                showStatus(`Encoded ${text.length} characters → ${output.value.length} characters`, 'success');
             } catch (e) {
                 showError('Encoding failed: ' + e.message);
                 output.value = '';
@@ -117,11 +371,11 @@
         function decode() {
             hideMessages();
             const text = input.value.trim();
-            if (!text) { output.value = ''; showStatus('Enter a Base64 string first.'); return; }
+            if (!text) { output.value = ''; showStatus('Enter a Base64 string first.', 'info'); return; }
             try {
                 const decoded = decodeURIComponent(escape(atob(text)));
                 output.value = decoded;
-                showStatus(`Decoded ${text.length} characters → ${decoded.length} characters`);
+                showStatus(`Decoded ${text.length} characters → ${decoded.length} characters`, 'success');
             } catch (e) {
                 showError('Invalid Base64 string. Make sure it contains only valid Base64 characters (A-Z, a-z, 0-9, +, /, =).');
                 output.value = '';
@@ -144,11 +398,11 @@
         function copyOutput() {
             if (!output.value) return;
             navigator.clipboard.writeText(output.value).then(() => {
-                showStatus('Copied to clipboard!');
+                showStatus('Copied to clipboard!', 'success');
             }).catch(() => {
                 output.select();
                 document.execCommand('copy');
-                showStatus('Copied!');
+                showStatus('Copied!', 'success');
             });
         }
 
@@ -157,11 +411,15 @@
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); encode(); }
         });
 
-        // Dark mode
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light', !isDark);
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
     </script>
 </body>
 </html>

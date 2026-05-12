@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,97 +7,221 @@
     <meta name="description" content="Generate UUID v4 and UUID v7 identifiers. Bulk generation and one-click copy." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🆔</text></svg>" />
+    <script>
+        (() => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') document.documentElement.classList.remove('dark');
+            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
+                document.documentElement.classList.add('dark');
+        })();
+    </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-        .uuid-row { @apply flex items-center gap-2 p-2.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-mono; }
-        .uuid-row:hover { @apply border-blue-300 dark:border-blue-600; }
-        .uuid-text { @apply flex-1 truncate select-all; }
-        .copy-mini { @apply text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 shrink-0; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500;
+            color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease;
+            padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent;
+        }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+        .light .back-link { color: rgba(71,85,105,0.8); background: rgba(241,245,249,0.5); }
+        .light .back-link:hover { color: #2563eb; background: rgba(219,234,254,0.5); border-color: rgba(59,130,246,0.2); }
+
+        .tool-card-surface {
+            background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(51,65,85,0.4); border-radius: 16px;
+        }
+        .light .tool-card-surface { background: rgba(255,255,255,0.7); border-color: rgba(203,213,225,0.5); }
+
+        .tool-input {
+            width: 100%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.875rem;
+            font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace;
+            outline: none; transition: all 0.2s ease;
+            background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0;
+        }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .light .tool-input { background: rgba(248,250,252,0.8); border-color: rgba(203,213,225,0.6); color: #1e293b; }
+        .light .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+
+        .tool-select {
+            padding: 0.5rem 2rem 0.5rem 0.75rem; border-radius: 10px; font-size: 0.875rem;
+            outline: none; cursor: pointer; transition: all 0.2s ease;
+            background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0;
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-repeat: no-repeat; background-position: right 0.5rem center; background-size: 1.25rem;
+        }
+        .tool-select:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .light .tool-select { background-color: rgba(248,250,252,0.8); border-color: rgba(203,213,225,0.6); color: #1e293b; }
+        .light .tool-select:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600;
+            border: none; cursor: pointer; transition: all 0.2s ease;
+            background: linear-gradient(135deg, #2563eb, #3b82f6); color: white;
+            box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3);
+        }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.625rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s ease;
+            background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.4); color: #cbd5e1;
+        }
+        .btn-secondary:hover { background: rgba(30,41,59,0.8); border-color: rgba(59,130,246,0.2); color: #e2e8f0; }
+        .light .btn-secondary { background: rgba(241,245,249,0.7); border-color: rgba(203,213,225,0.5); color: #475569; }
+        .light .btn-secondary:hover { background: rgba(219,234,254,0.5); border-color: rgba(59,130,246,0.2); color: #1e293b; }
+
+        .btn-ghost {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s ease;
+            background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7);
+        }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+        .light .btn-ghost { color: rgba(100,116,139,0.7); border-color: rgba(203,213,225,0.4); }
+        .light .btn-ghost:hover { background: rgba(241,245,249,0.6); color: #64748b; }
+
+        .status-msg { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.8rem; line-height: 1.5; }
+        .status-msg.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); color: #60a5fa; }
+        .status-msg.success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.15); color: #34d399; }
+        .light .status-msg.info { background: rgba(59,130,246,0.06); color: #2563eb; border-color: rgba(59,130,246,0.15); }
+        .light .status-msg.success { background: rgba(16,185,129,0.06); color: #16a34a; border-color: rgba(16,185,129,0.15); }
+
+        .uuid-row {
+            display: flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1rem; border-radius: 10px;
+            background: rgba(15,23,42,0.4); border: 1px solid rgba(51,65,85,0.3);
+            transition: all 0.2s ease;
+        }
+        .uuid-row:hover { border-color: rgba(59,130,246,0.2); background: rgba(15,23,42,0.6); }
+        .light .uuid-row { background: rgba(248,250,252,0.5); border-color: rgba(203,213,225,0.4); }
+        .light .uuid-row:hover { background: rgba(248,250,252,0.8); border-color: rgba(59,130,246,0.2); }
+        .uuid-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; user-select: all; }
+
+        details.tool-details summary { cursor: pointer; font-weight: 500; transition: color 0.2s ease; color: rgba(148,163,184,0.8); }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+        .light details.tool-details summary { color: rgba(71,85,105,0.8); }
+        .light details.tool-details summary:hover { color: #2563eb; }
+        .light details.tool-details[open] summary { color: #2563eb; }
+
+        .footer-disc {
+            padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5;
+            background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8);
+        }
+        .light .footer-disc { background: rgba(217,119,6,0.04); color: rgba(180,83,9,0.8); border-color: rgba(217,119,6,0.12); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
 
-    <div class="max-w-3xl mx-auto px-4 py-10">
-        <!-- Breadcrumb -->
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <a href="../" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
-            <span class="mx-2">/</span>
-            <span class="text-gray-700 dark:text-gray-300">UUID Generator</span>
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <button id="themeToggle" class="btn-ghost text-base px-3 py-2" title="Toggle theme" aria-label="Toggle theme">
+                <span id="themeIcon">🌙</span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🆔 UUID Generator</h1>
+            <p class="text-gray-400 light:text-gray-500 text-base leading-relaxed">
+                Generate UUID v4 (random) and UUID v7 (time-ordered) identifiers.
+                All generated client-side using <code class="px-1.5 py-0.5 rounded text-xs" style="background: rgba(30,41,59,0.5); border: 1px solid rgba(51,65,85,0.3);">crypto.randomUUID()</code>.
+            </p>
         </div>
 
-        <h1 class="text-3xl font-bold tracking-tight mb-2">🆔 UUID Generator</h1>
-        <p class="text-gray-500 dark:text-gray-400 mb-8">Generate UUID v4 (random) and UUID v7 (time-ordered) identifiers. All generated client-side using <code class="bg-gray-100 dark:bg-gray-800 px-1 rounded text-xs">crypto.randomUUID()</code>.</p>
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <!-- Controls -->
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+                <label class="text-sm font-medium text-gray-300 light:text-gray-700">UUID Version:</label>
+                <select id="version" class="tool-select">
+                    <option value="v4">UUID v4 (Random)</option>
+                    <option value="v7">UUID v7 (Time-ordered)</option>
+                </select>
+                <label class="text-sm font-medium text-gray-300 light:text-gray-700">Count:</label>
+                <select id="count" class="tool-select">
+                    <option value="1">1</option>
+                    <option value="5" selected>5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <button onclick="generate()" class="btn-primary">🔄 Generate</button>
+                <button onclick="copyAll()" class="btn-secondary">📋 Copy All</button>
+                <button onclick="download()" class="btn-secondary">⬇ Download</button>
+            </div>
 
-        <!-- Controls -->
-        <div class="flex flex-wrap items-center gap-3 mb-6">
-            <label class="text-sm font-medium">UUID Version:</label>
-            <select id="version" class="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="v4">UUID v4 (Random)</option>
-                <option value="v7">UUID v7 (Time-ordered)</option>
-            </select>
+            <!-- Results -->
+            <div id="results" class="space-y-2"></div>
 
-            <label class="text-sm font-medium ml-2">Count:</label>
-            <select id="count" class="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                <option value="1">1</option>
-                <option value="5" selected>5</option>
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-            </select>
-
-            <button onclick="generate()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium text-sm transition-colors">🔄 Generate</button>
-            <button onclick="copyAll()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">📋 Copy All</button>
-            <button onclick="download()" class="px-4 py-2 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm transition-colors">⬇ Download</button>
+            <!-- Status -->
+            <div id="status" class="hidden mt-4"></div>
         </div>
 
-        <!-- Results -->
-        <div id="results" class="space-y-2">
-            <!-- Generated UUIDs appear here -->
-        </div>
-
-        <p id="status" class="text-sm text-gray-400 mt-4 hidden"></p>
-
-        <!-- Info -->
-        <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
-            <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About UUID Versions</summary>
-            <div class="mt-2 space-y-2 leading-relaxed">
+        <details class="tool-details mt-6 text-sm fade-in-delay-3">
+            <summary class="px-1 py-2">About UUID Versions</summary>
+            <div class="mt-3 px-1 space-y-3 leading-relaxed text-gray-400 light:text-gray-500">
                 <div>
-                    <strong class="text-gray-700 dark:text-gray-300">UUID v4</strong> — Random UUID. All bits except the version (4) and variant (10xx) are randomly generated. 122 bits of entropy. Best for general-purpose use where uniqueness is the only requirement.
+                    <strong class="text-gray-200 light:text-gray-800">UUID v4</strong> — Random UUID. All bits except the version (4) and variant (10xx) are randomly generated. 122 bits of entropy. Best for general-purpose use where uniqueness is the only requirement.
                 </div>
                 <div>
-                    <strong class="text-gray-700 dark:text-gray-300">UUID v7</strong> — Time-ordered UUID. 48 bits of Unix timestamp (ms precision) followed by random data. Monotonically increasing, sortable, database-index-friendly. Draft standard (RFC 9562).
+                    <strong class="text-gray-200 light:text-gray-800">UUID v7</strong> — Time-ordered UUID. 48 bits of Unix timestamp (ms precision) followed by random data. Monotonically increasing, sortable, database-index-friendly. Draft standard (RFC 9562).
                 </div>
             </div>
         </details>
 
-        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/uuid-generator" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/uuid-generator" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">View source</a>
         </div>
     </div>
 
     <script>
-        function uuidv4() {
-            return crypto.randomUUID();
-        }
+        function uuidv4() { return crypto.randomUUID(); }
 
         function uuidv7() {
             const timestamp = Date.now();
             const bytes = new Uint8Array(16);
-            // 48-bit Unix timestamp (ms)
             bytes[0] = (timestamp / 2**40) & 0xFF;
             bytes[1] = (timestamp / 2**32) & 0xFF;
             bytes[2] = (timestamp / 2**24) & 0xFF;
             bytes[3] = (timestamp / 2**16) & 0xFF;
             bytes[4] = (timestamp / 2**8) & 0xFF;
             bytes[5] = timestamp & 0xFF;
-            // Random bytes for the rest
             crypto.getRandomValues(bytes.subarray(6));
-            // Set version (7)
             bytes[6] = (bytes[6] & 0x0F) | 0x70;
-            // Set variant (10xx)
             bytes[8] = (bytes[8] & 0x3F) | 0x80;
-
             const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
             return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
         }
@@ -111,35 +235,31 @@
 
             const uuids = [];
             for (let i = 0; i < count; i++) uuids.push(fn());
-
-            // Deduplicate check
             const unique = new Set(uuids);
             const label = version === 'v4' ? 'UUID v4' : 'UUID v7';
 
             container.innerHTML = uuids.map((uuid, i) => `
                 <div class="uuid-row group">
-                    <span class="text-xs text-gray-400 w-6 shrink-0">${i + 1}.</span>
-                    <span class="uuid-text" title="${uuid}">${uuid}</span>
-                    <button onclick="copySingle('${uuid}')" class="copy-mini opacity-0 group-hover:opacity-100 transition-opacity" title="Copy">📋</button>
+                    <span class="text-xs text-gray-500 w-6 shrink-0 text-right font-mono">${i + 1}.</span>
+                    <span class="uuid-text text-sm font-mono text-gray-200 light:text-gray-800" title="${uuid}">${uuid}</span>
+                    <button onclick="copySingle('${uuid}')" class="btn-ghost opacity-0 group-hover:opacity-100 transition-opacity shrink-0" title="Copy">📋</button>
                 </div>
             `).join('');
 
+            status.className = 'status-msg info fade-in';
             status.textContent = `Generated ${count} ${label} (${unique.size} unique)`;
-            status.classList.remove('hidden');
         }
 
-        function copySingle(uuid) {
-            navigator.clipboard.writeText(uuid).catch(() => {});
-        }
+        function copySingle(uuid) { navigator.clipboard.writeText(uuid).catch(() => {}); }
 
         function copyAll() {
             const items = document.querySelectorAll('.uuid-text');
             if (!items.length) return;
             const text = Array.from(items).map(el => el.textContent).join('\n');
+            const status = document.getElementById('status');
             navigator.clipboard.writeText(text).then(() => {
-                const status = document.getElementById('status');
+                status.className = 'status-msg success fade-in';
                 status.textContent = `Copied ${items.length} UUIDs to clipboard!`;
-                status.classList.remove('hidden');
             }).catch(() => {});
         }
 
@@ -156,14 +276,17 @@
             URL.revokeObjectURL(url);
         }
 
-        // Auto-generate on load
         generate();
 
-        // Dark mode
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light', !isDark);
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
     </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,77 +7,209 @@
     <meta name="description" content="Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔑</text></svg>" />
+    <script>
+        (() => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') document.documentElement.classList.remove('dark');
+            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
+                document.documentElement.classList.add('dark');
+        })();
+    </script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
         textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+        .light .back-link { color: rgba(71,85,105,0.8); background: rgba(241,245,249,0.5); }
+        .light .back-link:hover { color: #2563eb; background: rgba(219,234,254,0.5); border-color: rgba(59,130,246,0.2); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+        .light .tool-card-surface { background: rgba(255,255,255,0.7); border-color: rgba(203,213,225,0.5); }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .light .tool-input { background: rgba(248,250,252,0.8); border-color: rgba(203,213,225,0.6); color: #1e293b; }
+        .light .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.12); }
+        .light .tool-input::placeholder { color: rgba(148,163,184,0.7); }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+        .light .btn-ghost { color: rgba(100,116,139,0.7); border-color: rgba(203,213,225,0.4); }
+        .light .btn-ghost:hover { background: rgba(241,245,249,0.6); color: #64748b; }
+
+        .status-msg { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.8rem; line-height: 1.5; }
+        .status-msg.info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.15); color: #60a5fa; }
+        .status-msg.error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.15); color: #f87171; }
+        .light .status-msg.info { background: rgba(59,130,246,0.06); color: #2563eb; border-color: rgba(59,130,246,0.15); }
+        .light .status-msg.error { background: rgba(239,68,68,0.06); color: #dc2626; border-color: rgba(239,68,68,0.15); }
+
+        .result-block {
+            background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3);
+            border-radius: 12px; padding: 1rem;
+            transition: border-color 0.2s ease;
+        }
+        .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .light .result-block { background: rgba(248,250,252,0.4); border-color: rgba(203,213,225,0.4); }
+        .light .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .result-label {
+            font-size: 0.8125rem; font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #94a3b8;
+        }
+        .light .result-label { color: #64748b; }
+        .result-pre {
+            font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace;
+            font-size: 0.75rem; line-height: 1.6;
+            background: rgba(2,6,23,0.4); border-radius: 8px;
+            padding: 0.75rem 1rem;
+            overflow-x: auto;
+            color: #e2e8f0;
+            user-select: all;
+        }
+        .light .result-pre { background: rgba(248,250,252,0.6); color: #1e293b; }
+
+        details.tool-details summary { cursor: pointer; font-weight: 500; transition: color 0.2s ease; color: rgba(148,163,184,0.8); }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+        .light details.tool-details summary { color: rgba(71,85,105,0.8); }
+        .light details.tool-details summary:hover { color: #2563eb; }
+        .light details.tool-details[open] summary { color: #2563eb; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+        .light .footer-disc { background: rgba(217,119,6,0.04); color: rgba(180,83,9,0.8); border-color: rgba(217,119,6,0.12); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+        .fade-in-delay-4 { animation: fadeInUp 0.4s ease-out 0.4s both; }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-    <div class="max-w-3xl mx-auto px-4 py-10">
-        <div class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <a href="../" class="hover:text-blue-600 dark:hover:text-blue-400">← Tools</a>
-            <span class="mx-2">/</span>
-            <span class="text-gray-700 dark:text-gray-300">JWT Decoder</span>
-        </div>
-        <h1 class="text-3xl font-bold tracking-tight mb-2">🔑 JWT Decoder</h1>
-        <p class="text-gray-500 dark:text-gray-400 mb-8">Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.</p>
-        
-    <div class="mb-4">
-        <label class="block text-sm font-medium mb-2">JWT Token</label>
-        <textarea id="input" rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0."></textarea>
-    </div>
-    <button onclick="decodeJWT()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium mb-6">🔓 Decode</button>
-    <div id="results" class="space-y-4"></div>
-    <div id="error" class="text-sm text-red-500 hidden"></div>
-    <details class="mt-8 text-sm text-gray-500 dark:text-gray-400">
-        <summary class="cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 font-medium">About JWT</summary>
-        <div class="mt-2 leading-relaxed">
-            <p>A JWT (JSON Web Token) has three base64url-encoded parts separated by dots: <strong>header.payload.signature</strong>. This tool decodes the header and payload only — it does NOT verify the signature. No data is sent anywhere.</p>
-        </div>
-    </details>
-    <script>
-    const input = document.getElementById('input');
-    const results = document.getElementById('results');
-    const error = document.getElementById('error');
+<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
 
-    function decodeJWT() {
-        error.classList.add('hidden');
-        const token = input.value.trim();
-        if (!token) { showError('Enter a JWT token.'); return; }
-        const parts = token.split('.');
-        if (parts.length !== 3) { showError('Invalid JWT format. Expected 3 dot-separated parts.'); return; }
-        try {
-            const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            results.innerHTML = `
-                <div>
-                    <h3 class="text-sm font-semibold mb-1">Header</h3>
-                    <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs font-mono overflow-x-auto">${escapeHtml(JSON.stringify(header, null, 2))}</pre>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold mb-1">Payload</h3>
-                    <pre class="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg text-xs font-mono overflow-x-auto">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
-                </div>
-                <div>
-                    <h3 class="text-sm font-semibold mb-1">Signature</h3>
-                    <p class="text-xs text-gray-400 font-mono">${parts[2].substring(0, 32)}… (${parts[2].length} chars)</p>
-                </div>`;
-        } catch (e) { showError('Failed to decode: ' + e.message); }
-    }
-    function showError(msg) { error.textContent = msg; error.classList.remove('hidden'); results.innerHTML = ''; }
-    function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-    </script>
-    
-        <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <p class="text-xs text-gray-400">⚠️ AI-generated tool — verify output before relying on it. <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/jwt-decoder" target="_blank" rel="noopener" class="underline underline-offset-2 decoration-dotted">View source</a></p>
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <button id="themeToggle" class="btn-ghost text-base px-3 py-2" title="Toggle theme" aria-label="Toggle theme"><span id="themeIcon">🌙</span></button>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🔑 JWT Decoder</h1>
+            <p class="text-gray-400 light:text-gray-500 text-base leading-relaxed">
+                Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.
+            </p>
+        </div>
+
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <!-- Input -->
+            <div class="mb-5">
+                <label class="block text-sm font-medium mb-2 text-gray-300 light:text-gray-700">JWT Token</label>
+                <textarea id="input" rows="4" class="tool-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIn0."></textarea>
+            </div>
+
+            <!-- Decode button -->
+            <button onclick="decodeJWT()" class="btn-primary mb-6">🔓 Decode</button>
+
+            <!-- Results -->
+            <div id="results" class="space-y-4"></div>
+
+            <!-- Error -->
+            <div id="error" class="hidden mt-4"></div>
+        </div>
+
+        <details class="tool-details mt-6 text-sm fade-in-delay-3">
+            <summary class="px-1 py-2">About JWT</summary>
+            <div class="mt-3 px-1 leading-relaxed text-gray-400 light:text-gray-500">
+                <p>A JWT (JSON Web Token) has three base64url-encoded parts separated by dots: <strong class="text-gray-200 light:text-gray-800">header.payload.signature</strong>. This tool decodes the header and payload only — it does NOT verify the signature. No data is sent anywhere.</p>
+            </div>
+        </details>
+
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/jwt-decoder" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">View source</a>
         </div>
     </div>
+
     <script>
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
+        const input = document.getElementById('input');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+
+        function decodeJWT() {
+            error.classList.add('hidden');
+            results.innerHTML = '';
+
+            const token = input.value.trim();
+            if (!token) { showError('Enter a JWT token.'); return; }
+
+            const parts = token.split('.');
+            if (parts.length !== 3) { showError('Invalid JWT format. Expected 3 dot-separated parts.'); return; }
+
+            try {
+                const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+                const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+
+                results.innerHTML = `
+                    <div class="result-block fade-in">
+                        <div class="result-label">Header</div>
+                        <pre class="result-pre">${escapeHtml(JSON.stringify(header, null, 2))}</pre>
+                    </div>
+                    <div class="result-block fade-in-delay-1">
+                        <div class="result-label">Payload</div>
+                        <pre class="result-pre">${escapeHtml(JSON.stringify(payload, null, 2))}</pre>
+                    </div>
+                    <div class="result-block fade-in-delay-2">
+                        <div class="result-label">Signature</div>
+                        <p class="text-sm font-mono text-gray-500 light:text-gray-400 select-all">${parts[2].substring(0, 32)}… (${parts[2].length} chars)</p>
+                    </div>
+                `;
+            } catch (e) {
+                showError('Failed to decode: ' + e.message);
+            }
         }
+
+        function showError(msg) {
+            error.textContent = msg;
+            error.className = 'status-msg error fade-in';
+            results.innerHTML = '';
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light', !isDark);
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
     </script>
-    
 </body>
 </html>

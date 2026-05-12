@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,84 +7,517 @@
     <meta name="description" content="A growing collection of free, privacy-first browser tools. Nothing leaves your device. No servers, no tracking, no ads." />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔧</text></svg>" />
+    <script>
+        // Dark-first: default to dark, respect saved preference or system
+        (() => {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') document.documentElement.classList.remove('dark');
+            else if (saved === 'dark' || !window.matchMedia('(prefers-color-scheme: light)').matches)
+                document.documentElement.classList.add('dark');
+        })();
+    </script>
     <style>
-        * { transition: background-color 0.2s, border-color 0.2s, color 0.2s; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        /* ── Reset & Base ── */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── Scroll Reveal ── */
+        .reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+        .reveal-delay-5 { transition-delay: 0.5s; }
+        .reveal-delay-6 { transition-delay: 0.6s; }
+
+        /* ── Hero Gradient Animation ── */
+        .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 30%, #1e3a8a 60%, #0f172a 100%);
+            background-size: 200% 200%;
+            animation: heroShift 12s ease-in-out infinite alternate;
+        }
+        @keyframes heroShift {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ── Grid Pattern Overlay ── */
+        .hero-pattern {
+            background-image: radial-gradient(rgba(59,130,246,0.08) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        /* ── Glow Effects ── */
+        .glow-blue {
+            box-shadow: 0 0 40px -12px rgba(59, 130, 246, 0.3);
+        }
+        .glow-blue:hover {
+            box-shadow: 0 0 60px -8px rgba(59, 130, 246, 0.4);
+        }
+
+        /* ── Tool Cards ── */
         .tool-card {
-            @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md hover:-translate-y-0.5 cursor-pointer;
+            position: relative;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            background: linear-gradient(135deg, transparent 40%, rgba(59,130,246,0.15) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        .tool-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(59, 130, 246, 0.3);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4), 0 0 30px -10px rgba(59, 130, 246, 0.15);
+        }
+        .tool-card:hover::before { opacity: 1; }
+        .tool-card > * { position: relative; z-index: 1; }
+
+        /* Light mode overrides */
+        .light .tool-card {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(203, 213, 225, 0.5);
+        }
+        .light .tool-card:hover {
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12), 0 0 30px -10px rgba(59, 130, 246, 0.2);
+        }
+
+        /* ── New Badge ── */
+        .badge-new {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.175rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+            box-shadow: 0 2px 8px -2px rgba(5, 150, 105, 0.4);
+        }
+        .badge-new::before {
+            content: '';
+            display: inline-block;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* ── Category Tag ── */
+        .category-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        /* ── Search Bar ── */
+        .search-bar {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            border-radius: 14px;
+            padding: 0.75rem 1.25rem;
+            width: 100%;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+            outline: none;
             transition: all 0.2s ease;
         }
-        .tool-card:hover { @apply shadow-md border-blue-300 dark:border-blue-600; }
-        .bg-grid {
-            background-image: radial-gradient(rgba(59,130,246,0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
+        .search-bar:focus {
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-        .footer-link { @apply text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 underline underline-offset-2 decoration-dotted; }
+        .search-bar::placeholder { color: rgba(148, 163, 184, 0.6); }
+        .light .search-bar {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: rgba(203, 213, 225, 0.6);
+            color: #1e293b;
+        }
+        .light .search-bar::placeholder { color: rgba(100, 116, 139, 0.6); }
+        .light .search-bar:focus { border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+        /* ── Category Filter Chips ── */
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            user-select: none;
+        }
+        .chip-inactive {
+            background: rgba(30, 41, 59, 0.4);
+            color: rgba(148, 163, 184, 0.8);
+            border-color: rgba(51, 65, 85, 0.4);
+        }
+        .chip-inactive:hover {
+            background: rgba(30, 41, 59, 0.7);
+            color: #cbd5e1;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        .chip-active {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .light .chip-inactive {
+            background: rgba(241, 245, 249, 0.7);
+            color: #64748b;
+            border-color: rgba(203, 213, 225, 0.6);
+        }
+        .light .chip-inactive:hover {
+            background: rgba(226, 232, 240, 0.9);
+            color: #334155;
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+        .light .chip-active {
+            background: rgba(59, 130, 246, 0.1);
+            color: #2563eb;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        /* ── Stat Counter ── */
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .light .stat-value {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ── Theme Toggle ── */
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.4);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #94a3b8;
+            font-size: 1.1rem;
+        }
+        .theme-toggle:hover {
+            background: rgba(30, 41, 59, 0.8);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #e2e8f0;
+        }
+        .light .theme-toggle {
+            background: rgba(241, 245, 249, 0.7);
+            border-color: rgba(203, 213, 225, 0.5);
+            color: #64748b;
+        }
+        .light .theme-toggle:hover {
+            background: rgba(226, 232, 240, 0.9);
+            color: #334155;
+        }
+
+        /* ── Grid Empty State ── */
+        .empty-state { animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51, 65, 85, 0.5); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71, 85, 105, 0.7); }
+
+        /* ── Loading Skeleton ── */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(30,41,59,0.4) 25%, rgba(51,65,85,0.4) 50%, rgba(30,41,59,0.4) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 16px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .light .skeleton {
+            background: linear-gradient(90deg, rgba(203,213,225,0.4) 25%, rgba(226,232,240,0.6) 50%, rgba(203,213,225,0.4) 75%);
+            background-size: 200% 100%;
+        }
+
+        /* ── Responsive Typography ── */
+        @media (max-width: 640px) {
+            .stat-value { font-size: 1.75rem; }
+            .hero-title { font-size: 2rem; }
+        }
     </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-950 text-gray-100 min-h-screen light:bg-gray-50 light:text-gray-900">
 
-    <!-- Hero -->
-    <header class="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
-        <div class="max-w-5xl mx-auto px-4 py-20 sm:py-28 text-center">
-            <div class="text-5xl mb-4">🔧</div>
-            <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-4">Vibe-Coded Tools</h1>
-            <p class="text-lg sm:text-xl text-blue-200 max-w-2xl mx-auto mb-8">
-                Free, privacy-first browser tools that run entirely on your device.
-                No data leaves your machine. No servers. No tracking.
-            </p>
-            <div class="flex flex-wrap justify-center gap-3 text-sm text-blue-200">
-                <span class="bg-white/10 rounded-full px-4 py-1.5">🕒 One new tool every day</span>
-                <span class="bg-white/10 rounded-full px-4 py-1.5">🔒 Zero server uploads</span>
-                <span class="bg-white/10 rounded-full px-4 py-1.5">📦 Pure HTML + JS</span>
+    <!-- ═══ Navbar ═══ -->
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50 light:border-gray-200/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <a href="./" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener"
+                   class="text-sm text-gray-400 hover:text-blue-400 transition-colors no-underline hidden sm:inline-flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.113.793-.258.793-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.192.694.801.576C20.566 21.797 24 17.3 24 12 24 5.373 18.627 0 12 0z"/></svg>
+                    GitHub
+                </a>
+                <button id="themeToggle" class="theme-toggle" title="Toggle theme" aria-label="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Tools Grid -->
-    <main class="max-w-5xl mx-auto px-4 -mt-8 pb-16">
-        <div id="tools-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Populated by JS from tools.json -->
+    <!-- ═══ Hero ═══ -->
+    <section class="hero-gradient hero-pattern relative overflow-hidden pt-16">
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-950 light:to-gray-50 pointer-events-none"></div>
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28 pb-20 sm:pb-24 text-center relative z-10">
+            <div class="reveal visible">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium mb-6"
+                     style="background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.15);">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    All tools run 100% in your browser
+                </div>
+            </div>
+            <h1 class="reveal visible text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-5">
+                Free Tools,<br class="sm:hidden" />
+                <span class="text-transparent bg-clip-text" style="background: linear-gradient(135deg, #60a5fa, #a78bfa);">Zero Compromises</span>
+            </h1>
+            <p class="reveal visible reveal-delay-1 text-gray-400 light:text-gray-500 text-lg sm:text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
+                Privacy-first browser utilities. No servers, no tracking, no ads —
+                everything runs locally on <span class="text-gray-200 light:text-gray-700 font-medium">your</span> device.
+            </p>
+            <div class="reveal visible reveal-delay-2 flex flex-wrap justify-center gap-3 mb-10">
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
+                      style="background: rgba(30,41,59,0.6); border: 1px solid rgba(51,65,85,0.4); color: #94a3b8;">
+                    <span>🕒</span> New tool added daily
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
+                      style="background: rgba(30,41,59,0.6); border: 1px solid rgba(51,65,85,0.4); color: #94a3b8;">
+                    <span>🔒</span> Zero server uploads
+                </span>
+                <span class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm"
+                      style="background: rgba(30,41,59,0.6); border: 1px solid rgba(51,65,85,0.4); color: #94a3b8;">
+                    <span>📦</span> Pure HTML + JS
+                </span>
+            </div>
+
+            <!-- Stats -->
+            <div class="reveal visible reveal-delay-3 grid grid-cols-3 gap-6 sm:gap-12 max-w-md mx-auto">
+                <div class="text-center">
+                    <div class="stat-value" id="statTools">0</div>
+                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Tools</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-value">100%</div>
+                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Client-Side</div>
+                </div>
+                <div class="text-center">
+                    <div class="stat-value">🔒</div>
+                    <div class="text-xs sm:text-sm text-gray-500 light:text-gray-400 mt-1">Private</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══ Tools Section ═══ -->
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 pb-20 -mt-6 relative z-10">
+        <!-- Search + Filters -->
+        <div class="reveal mb-8 space-y-4">
+            <!-- Search -->
+            <div class="relative">
+                <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" id="searchInput" class="search-bar pl-11" placeholder="Search tools by name, description, or category…" autocomplete="off" />
+            </div>
+            <!-- Category Chips -->
+            <div id="categoryFilters" class="flex flex-wrap gap-2">
+                <span class="chip chip-active" data-category="all">All</span>
+                <!-- Populated by JS -->
+            </div>
         </div>
 
-        <!-- Loading / Error -->
-        <div id="tools-loading" class="text-center py-20 text-gray-400">
-            <div class="inline-block w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p>Loading tools…</p>
+        <!-- Results count -->
+        <div class="reveal flex items-center justify-between mb-5">
+            <p id="resultsCount" class="text-sm text-gray-500 light:text-gray-400"></p>
         </div>
-    </main>
 
-    <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700">
-        <div class="max-w-5xl mx-auto px-4 py-8 text-sm text-gray-500 dark:text-gray-400">
-            <div class="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-                <div class="flex flex-wrap gap-x-6 gap-y-2">
-                    <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener" class="footer-link">
+        <!-- Grid -->
+        <div id="tools-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- Populated by JS -->
+        </div>
+
+        <!-- Loading state -->
+        <div id="tools-loading" class="text-center py-20">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div class="skeleton h-48"></div>
+                <div class="skeleton h-48"></div>
+                <div class="skeleton h-48"></div>
+                <div class="skeleton h-48"></div>
+                <div class="skeleton h-48"></div>
+                <div class="skeleton h-48"></div>
+            </div>
+            <p class="text-sm text-gray-500 mt-4">Loading tools…</p>
+        </div>
+
+        <!-- Empty state -->
+        <div id="emptyState" class="empty-state hidden text-center py-16">
+            <div class="text-5xl mb-4">🔍</div>
+            <p class="text-xl font-semibold text-gray-300 light:text-gray-700 mb-2">No tools found</p>
+            <p class="text-sm text-gray-500 light:text-gray-400">Try a different search term or <button onclick="resetFilters()" class="text-blue-400 hover:text-blue-300 underline underline-offset-2 cursor-pointer bg-transparent border-none font-inherit">clear filters</button>.</p>
+        </div>
+    </section>
+
+    <!-- ═══ Footer ═══ -->
+    <footer class="border-t border-gray-800 light:border-gray-200" style="background: rgba(2,6,23,0.6);">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 py-12">
+            <!-- Top row -->
+            <div class="flex flex-col sm:flex-row justify-between gap-6 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 text-lg font-bold mb-2">
+                        <span>🔧</span> Vibe-Coded Tools
+                    </div>
+                    <p class="text-sm text-gray-500 light:text-gray-400 max-w-sm">
+                        Free, open-source, privacy-first browser tools. Every tool runs 100% client-side —
+                        your data never leaves your device.
+                    </p>
+                </div>
+                <div class="flex flex-col gap-2 text-sm">
+                    <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener"
+                       class="text-gray-400 hover:text-blue-400 transition-colors no-underline inline-flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.113.793-.258.793-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.192.694.801.576C20.566 21.797 24 17.3 24 12 24 5.373 18.627 0 12 0z"/></svg>
                         GitHub Repository
                     </a>
-                    <a href="mailto:contact.rizkykurniawan@gmail.com" class="footer-link">
+                    <a href="mailto:contact.rizkykurniawan@gmail.com"
+                       class="text-gray-400 hover:text-blue-400 transition-colors no-underline inline-flex items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
                         Report Issue
                     </a>
                 </div>
-                <span class="text-gray-400">Made by <a href="https://github.com/kykurniawan" target="_blank" rel="noopener" class="footer-link">Rizky Kurniawan</a></span>
             </div>
 
-            <div class="bg-amber-50 dark:bg-yellow-900/20 border border-amber-200 dark:border-yellow-800 rounded-lg p-4 text-amber-800 dark:text-amber-200 text-xs leading-relaxed">
-                <strong class="block mb-1">⚠️ AI-Generated Content Disclaimer</strong>
+            <!-- AI Disclaimer -->
+            <div class="rounded-xl p-4 text-xs leading-relaxed mb-6"
+                 style="background: rgba(217,119,6,0.08); border: 1px solid rgba(217,119,6,0.15); color: rgba(251,191,36,0.9);">
+                <strong class="block mb-1 text-amber-300 light:text-amber-700">⚠️ AI-Generated Content Disclaimer</strong>
                 All tools and content on this site are generated by AI with minimum human intervention.
                 The author does not guarantee the correctness, accuracy, or validity of any tool output.
                 If you suspect an error, please review the
-                <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted">public source code</a>
+                <a href="https://github.com/kykurniawan/vibe-coded-tools" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200 light:text-amber-700 light:hover:text-amber-800">public source code</a>
                 and open an issue to report the problem. Use these tools at your own discretion.
+            </div>
+
+            <!-- Bottom bar -->
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-2 pt-6 border-t border-gray-800 light:border-gray-200 text-xs text-gray-500 light:text-gray-400">
+                <span>Made with ❤️ by <a href="https://github.com/kykurniawan" target="_blank" rel="noopener" class="text-gray-400 hover:text-blue-400 transition-colors no-underline">Rizky Kurniawan</a></span>
+                <span>© 2024-2025 Vibe-Coded Tools</span>
             </div>
         </div>
     </footer>
 
     <script>
-        (async () => {
-            const container = document.getElementById('tools-container');
-            const loading = document.getElementById('tools-loading');
+        // ─── Category Mapping ───
+        const CATEGORY_MAP = {
+            'base64': 'Encoding',
+            'uuid-generator': 'Generation',
+            'hash-generator': 'Security',
+            'json-formatter': 'Developer Tools',
+            'jwt-decoder': 'Security',
+            'timestamp-converter': 'Conversion',
+        };
+        const CATEGORY_COLORS = {
+            'Encoding': { bg: 'rgba(14,165,233,0.12)', text: '#38bdf8', border: 'rgba(14,165,233,0.2)' },
+            'Generation': { bg: 'rgba(168,85,247,0.12)', text: '#c084fc', border: 'rgba(168,85,247,0.2)' },
+            'Security': { bg: 'rgba(239,68,68,0.12)', text: '#f87171', border: 'rgba(239,68,68,0.2)' },
+            'Developer Tools': { bg: 'rgba(34,197,94,0.12)', text: '#4ade80', border: 'rgba(34,197,94,0.2)' },
+            'Conversion': { bg: 'rgba(251,191,36,0.12)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+        };
+        const LIGHT_CATEGORY_COLORS = {
+            'Encoding': { bg: 'rgba(14,165,233,0.08)', text: '#0284c7', border: 'rgba(14,165,233,0.2)' },
+            'Generation': { bg: 'rgba(168,85,247,0.08)', text: '#7c3aed', border: 'rgba(168,85,247,0.2)' },
+            'Security': { bg: 'rgba(239,68,68,0.08)', text: '#dc2626', border: 'rgba(239,68,68,0.2)' },
+            'Developer Tools': { bg: 'rgba(34,197,94,0.08)', text: '#16a34a', border: 'rgba(34,197,94,0.2)' },
+            'Conversion': { bg: 'rgba(251,191,36,0.08)', text: '#d97706', border: 'rgba(251,191,36,0.2)' },
+        };
 
+        // Mark which tools are "new" (by ID)
+        const NEW_TOOL_IDS = new Set(['jwt-decoder', 'timestamp-converter']);
+
+        // ─── DOM Refs ───
+        const container = document.getElementById('tools-container');
+        const loading = document.getElementById('tools-loading');
+        const emptyState = document.getElementById('emptyState');
+        const searchInput = document.getElementById('searchInput');
+        const resultsCount = document.getElementById('resultsCount');
+        const categoryFilters = document.getElementById('categoryFilters');
+        const statTools = document.getElementById('statTools');
+
+        let allTools = [];
+        let activeCategory = 'all';
+        let searchQuery = '';
+
+        // ─── Theme Toggle ───
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light', !isDark);
+            themeIcon.textContent = isDark ? '🌙' : '☀️';
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            // Re-render category colors
+            renderCategoryChips();
+        });
+
+        // ─── Fetch & Render ───
+        (async () => {
             try {
                 const res = await fetch('tools.json');
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -95,31 +528,167 @@
                         <p class="text-4xl mb-3">🏗️</p>
                         <p class="text-lg">No tools published yet. Check back tomorrow!</p>
                     </div>`;
+                    loading.style.display = 'none';
                     return;
                 }
 
-                container.innerHTML = data.tools.map(t => `
-                    <a href="${t.path}" class="tool-card block no-underline text-inherit">
-                        <div class="text-3xl mb-3">${t.icon || '🔧'}</div>
-                        <h3 class="font-semibold text-lg mb-1.5">${t.name}</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">${t.description}</p>
-                    </a>
-                `).join('');
+                allTools = data.tools;
+                statTools.textContent = allTools.length;
+
+                // Populate categories
+                const cats = new Set();
+                allTools.forEach(t => {
+                    if (CATEGORY_MAP[t.id]) cats.add(CATEGORY_MAP[t.id]);
+                });
+                const sortedCats = ['all', ...Array.from(cats).sort()];
+                categoryFilters.innerHTML = sortedCats.map(c =>
+                    c === 'all'
+                        ? `<span class="chip chip-active" data-category="all">All</span>`
+                        : `<span class="chip chip-inactive" data-category="${c}">${c}</span>`
+                ).join('');
+
+                // Category click handlers
+                document.querySelectorAll('.chip').forEach(chip => {
+                    chip.addEventListener('click', () => {
+                        document.querySelectorAll('.chip').forEach(c => {
+                            c.className = c.dataset.category === 'all' ? 'chip chip-inactive' : 'chip chip-inactive';
+                        });
+                        chip.className = 'chip chip-active';
+                        activeCategory = chip.dataset.category;
+                        renderTools();
+                    });
+                });
+
+                // Initial render
+                renderTools();
+
+                // Setup scroll reveal on already-rendered cards
+                observeReveals();
+
             } catch (e) {
-                loading.innerHTML = `<p class="text-red-400">⚠️ Failed to load tools. <button onclick="location.reload()" class="underline">Reload</button></p>`;
+                loading.innerHTML = `<p class="text-red-400">⚠️ Failed to load tools. <button onclick="location.reload()" class="underline cursor-pointer bg-transparent border-none text-red-400 hover:text-red-300">Reload</button></p>`;
             } finally {
                 loading.style.display = 'none';
             }
         })();
-    </script>
 
-    <!-- Dark mode detection -->
-    <script>
-        if (localStorage.getItem('theme') === 'dark' ||
-            (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
+        // ─── Search ───
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.toLowerCase().trim();
+            renderTools();
+        });
+
+        function resetFilters() {
+            searchInput.value = '';
+            searchQuery = '';
+            activeCategory = 'all';
+            document.querySelectorAll('.chip').forEach(c => {
+                c.className = c.dataset.category === 'all' ? 'chip chip-active' : 'chip chip-inactive';
+            });
+            renderTools();
+            searchInput.focus();
         }
-    </script>
 
+        // ─── Render ───
+        function renderTools() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const colorMap = isDark ? CATEGORY_COLORS : LIGHT_CATEGORY_COLORS;
+
+            let filtered = allTools.filter(t => {
+                const catMatch = activeCategory === 'all' || CATEGORY_MAP[t.id] === activeCategory;
+                const q = searchQuery;
+                const searchMatch = !q ||
+                    t.name.toLowerCase().includes(q) ||
+                    t.description.toLowerCase().includes(q) ||
+                    (CATEGORY_MAP[t.id] || '').toLowerCase().includes(q) ||
+                    t.id.toLowerCase().includes(q);
+                return catMatch && searchMatch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                resultsCount.textContent = '';
+            } else {
+                emptyState.classList.add('hidden');
+                resultsCount.textContent = `Showing ${filtered.length} tool${filtered.length !== 1 ? 's' : ''}`;
+                container.innerHTML = filtered.map(t => {
+                    const category = CATEGORY_MAP[t.id] || 'Utility';
+                    const colors = colorMap[category] || { bg: 'rgba(100,116,139,0.12)', text: '#94a3b8', border: 'rgba(100,116,139,0.2)' };
+                    const isNew = NEW_TOOL_IDS.has(t.id);
+                    return `
+                        <a href="${t.path}" class="tool-card block no-underline text-inherit group">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="text-3xl">${t.icon || '🔧'}</div>
+                                ${isNew ? `<span class="badge-new">New</span>` : ''}
+                            </div>
+                            <h3 class="font-semibold text-base sm:text-lg mb-1.5 text-gray-100 group-hover:text-blue-300 transition-colors light:text-gray-900 light:group-hover:text-blue-600">${t.name}</h3>
+                            <p class="text-sm text-gray-400 light:text-gray-500 leading-relaxed mb-3">${t.description}</p>
+                            <span class="category-tag" style="background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border};">${category}</span>
+                        </a>
+                    `;
+                }).join('');
+            }
+
+            // Observe new cards for scroll animation
+            observeReveals();
+        }
+
+        function renderCategoryChips() {
+            // Re-render chips with correct colors for current theme
+            document.querySelectorAll('.chip').forEach(chip => {
+                const cat = chip.dataset.category;
+                if (cat === activeCategory && cat === chip.dataset.category) {
+                    // keep active class
+                } else if (cat === 'all' && activeCategory === 'all') {
+                    chip.className = 'chip chip-active';
+                } else {
+                    chip.className = 'chip chip-inactive';
+                }
+            });
+        }
+
+        // ─── Scroll Reveal ───
+        function observeReveals() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+            document.querySelectorAll('.reveal:not(.visible)').forEach(el => observer.observe(el));
+        }
+
+        // Initial observe for elements already in DOM
+        document.addEventListener('DOMContentLoaded', observeReveals);
+        // Also run after a short delay for any late-added elements
+        setTimeout(observeReveals, 500);
+
+        // ─── Animate Stats Counter ───
+        function animateCounter(el, target, duration = 800) {
+            const start = performance.now();
+            function update(now) {
+                const progress = Math.min((now - start) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+                el.textContent = Math.floor(eased * target);
+                if (progress < 1) requestAnimationFrame(update);
+            }
+            requestAnimationFrame(update);
+        }
+
+        const statObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const target = parseInt(entry.target.textContent) || 0;
+                    animateCounter(entry.target, target);
+                    statObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.5 });
+        if (statTools) statObserver.observe(statTools);
+    </script>
 </body>
 </html>
