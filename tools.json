@@ -41,6 +41,13 @@
       "description": "Convert between Unix timestamps (seconds/milliseconds) and human-readable dates in various timezones.",
       "icon": "\u23f1\ufe0f",
       "path": "timestamp-converter/"
+    },
+    {
+      "id": "url-encoder",
+      "name": "URL Encoder / Decoder",
+      "description": "Encode or decode URL components and full URLs. Handles special characters and Unicode.",
+      "icon": "\ud83d\udd17",
+      "path": "url-encoder/"
     }
   ]
 }
