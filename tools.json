@@ -48,6 +48,13 @@
       "description": "Encode or decode URL components and full URLs. Handles special characters and Unicode.",
       "icon": "\ud83d\udd17",
       "path": "url-encoder/"
+    },
+    {
+      "id": "lorem-ipsum",
+      "name": "Lorem Ipsum Generator",
+      "description": "Generate placeholder text in various lengths (words, sentences, paragraphs). Customize starting text.",
+      "icon": "\ud83d\udcdd",
+      "path": "lorem-ipsum/"
     }
   ]
 }
