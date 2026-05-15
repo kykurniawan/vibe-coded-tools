@@ -124,35 +124,35 @@
         window.getSelection().addRange(range);
     }
 
+    function randomWords(n) {
+        const w = [];
+        for (let i = 0; i < n; i++) w.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
+        return w;
+    }
+    function randomSentence(len) {
+        len = len || (8 + Math.floor(Math.random() * 12));
+        return randomWords(len).join(' ') + '.';
+    }
     function generateLorem() {
         const unit = document.getElementById('unit').value;
         const count = parseInt(document.getElementById('count').value) || 5;
+        const LOREM_OPENING = ['lorem','ipsum','dolor','sit','amet','consectetur','adipiscing','elit'];
+        const LOREM_START = 'Lorem ipsum dolor sit amet';
         if (unit === 'words') {
-            const words = [];
-            for (let i = 0; i < count; i++) words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
-            const text = words.join(' ') + '.';
-            output.textContent = text.charAt(0).toUpperCase() + text.slice(1);
+            const words = [...LOREM_OPENING].concat(randomWords(Math.max(0, count - LOREM_OPENING.length)));
+            output.textContent = words.slice(0, count).join(' ') + '.';
         } else if (unit === 'sentences') {
-            const sentences = [];
-            for (let s = 0; s < count; s++) {
-                const len = 8 + Math.floor(Math.random() * 12);
-                const words = [];
-                for (let i = 0; i < len; i++) words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
-                sentences.push(words.join(' ') + '.');
-            }
-            output.textContent = sentences.join(' ').charAt(0).toUpperCase() + sentences.join(' ').slice(1);
+            const sentences = [LOREM_START + ', ' + randomWords(5 + Math.floor(Math.random() * 5)).join(' ') + '.'];
+            for (let s = 1; s < count; s++) sentences.push(randomSentence());
+            output.textContent = sentences.join(' ');
         } else {
-            const paragraphs = [];
-            for (let p = 0; p < count; p++) {
-                const sentenceCount = 3 + Math.floor(Math.random() * 6);
-                const sentences = [];
-                for (let s = 0; s < sentenceCount; s++) {
-                    const len = 8 + Math.floor(Math.random() * 12);
-                    const words = [];
-                    for (let i = 0; i < len; i++) words.push(WORDS[Math.floor(Math.random() * WORDS.length)]);
-                    sentences.push(words.join(' ') + '.');
-                }
-                paragraphs.push(sentences.join(' '));
+            const firstPara = [LOREM_START + ', ' + randomWords(5 + Math.floor(Math.random() * 5)).join(' ') + '.'];
+            for (let s = 0; s < 2 + Math.floor(Math.random() * 5); s++) firstPara.push(randomSentence());
+            const paragraphs = [firstPara.join(' ')];
+            for (let p = 1; p < count; p++) {
+                const sents = [];
+                for (let s = 0; s < 3 + Math.floor(Math.random() * 6); s++) sents.push(randomSentence());
+                paragraphs.push(sents.join(' '));
             }
             output.textContent = paragraphs.join('\n\n');
         }
