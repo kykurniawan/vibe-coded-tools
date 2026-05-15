@@ -100,7 +100,7 @@
                     <label class="text-sm font-medium text-gray-300">Output</label>
                     <span id="status" class="text-xs text-gray-500"></span>
                 </div>
-                <textarea id="output" rows="8" class="tool-input" readonly onclick="this.select()" placeholder="Formatted JSON will appear here…"></textarea>
+                <div id="output" class="tool-input whitespace-pre-wrap break-words min-h-[200px] max-h-[500px] overflow-y-auto select-all cursor-text" onclick="selectOutput()">Formatted JSON will appear here…</div>
             </div>
 
             <!-- Error -->
@@ -132,7 +132,7 @@
             hideError();
             try {
                 const parsed = JSON.parse(input.value);
-                output.value = JSON.stringify(parsed, null, 2);
+                output.textContent = JSON.stringify(parsed, null, 2);
                 status.textContent = '✓ Formatted';
                 status.className = 'text-xs text-emerald-400';
             } catch (e) { showError('Invalid JSON: ' + e.message); }
@@ -142,8 +142,8 @@
             hideError();
             try {
                 const parsed = JSON.parse(input.value);
-                output.value = JSON.stringify(parsed);
-                status.textContent = '✓ Minified (' + output.value.length + ' chars)';
+                output.textContent = JSON.stringify(parsed);
+                status.textContent = '✓ Minified (' + output.textContent.length + ' chars)';
                 status.className = 'text-xs text-emerald-400';
             } catch (e) { showError('Invalid JSON: ' + e.message); }
         }
@@ -156,7 +156,14 @@
             } catch (e) { showError('✗ Invalid: ' + e.message); }
         }
 
-        function clearAll() { input.value = ''; output.value = ''; hideError(); status.textContent = ''; status.className = 'text-xs text-gray-500'; }
+        function clearAll() { input.value = ''; output.textContent = 'Formatted JSON will appear here…'; hideError(); status.textContent = ''; status.className = 'text-xs text-gray-500'; }
+
+        function selectOutput() {
+            const range = document.createRange();
+            range.selectNodeContents(output);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+        }
 
         function showError(msg) {
             error.textContent = msg;
