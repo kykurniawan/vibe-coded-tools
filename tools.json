@@ -55,6 +55,13 @@
       "description": "Generate placeholder text in various lengths (words, sentences, paragraphs). Customize starting text.",
       "icon": "\ud83d\udcdd",
       "path": "lorem-ipsum/"
+    },
+    {
+      "id": "case-converter",
+      "name": "Case Converter",
+      "description": "Convert text between lowercase, UPPERCASE, Title Case, camelCase, PascalCase, snake_case, and kebab-case.",
+      "icon": "\ud83d\udd24",
+      "path": "case-converter/"
     }
   ]
 }
