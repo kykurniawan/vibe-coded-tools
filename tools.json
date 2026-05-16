@@ -62,6 +62,13 @@
       "description": "Convert text between lowercase, UPPERCASE, Title Case, camelCase, PascalCase, snake_case, and kebab-case.",
       "icon": "\ud83d\udd24",
       "path": "case-converter/"
+    },
+    {
+      "id": "qr-code",
+      "name": "QR Code Generator",
+      "description": "Generate QR codes from any text or URL. Download as PNG. Uses qrcodejs library.",
+      "icon": "\ud83d\udcf1",
+      "path": "qr-code/"
     }
   ]
 }
