@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Password Generator — Vibe-Coded Tools</title>
+    <meta name="description" content="Generate strong random passwords with configurable length and character types. Check password strength." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .tool-input[readonly] { cursor: default; }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .status-msg { padding: 0.5rem 0; font-size: 0.8rem; color: #94a3b8; }
+
+        .result-block { background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3); border-radius: 12px; padding: 1rem; transition: border-color 0.2s ease; }
+        .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .result-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: #94a3b8; }
+        .result-pre { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.75rem; line-height: 1.6; background: rgba(2,6,23,0.4); border-radius: 8px; padding: 0.75rem 1rem; overflow-x: auto; color: #e2e8f0; user-select: all; }
+
+        details.tool-details summary { cursor: pointer; font-weight: 500; transition: color 0.2s ease; color: rgba(148,163,184,0.8); }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+        .fade-in-delay-4 { animation: fadeInUp 0.4s ease-out 0.4s both; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🔒 Password Generator</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Generate strong random passwords with configurable length and character types. Check password strength.
+            </p>
+        </div>
+
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+        <div class="space-y-4">
+            <div><label class="block text-sm font-medium mb-1">Length</label><input type="range" id="length" min="4" max="128" value="24" oninput="updateLen()" class="w-full" /><span id="lenDisplay" class="text-sm font-mono ml-2">24</span></div>
+            <div class="space-y-2">
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="upper" checked /> A-Z (Uppercase)</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="lower" checked /> a-z (Lowercase)</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="digits" checked /> 0-9 (Digits)</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="symbols" checked /> !@#$%^&* (Symbols)</label>
+            </div>
+        </div>
+        <div class="space-y-4">
+            <div><label class="block text-sm font-medium mb-1">Exclude Ambiguous</label><label class="flex items-center gap-2 text-sm"><input type="checkbox" id="noAmbiguous" checked /> Exclude 0OIl1</label></div>
+            <div><label class="block text-sm font-medium mb-1">Count</label><select id="count" class="px-3 py-2 border border-gray-600 bg-gray-800 rounded-lg text-sm"><option value="1">1</option><option value="5" selected>5</option><option value="10">10</option></select></div>
+            <button onclick="generate()" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium">🔄 Generate</button>
+        </div>
+    </div>
+    <div id="passwords" class="space-y-2 mb-4"></div>
+    <div id="strength" class="text-xs text-gray-400 mb-4"></div>
+    <details class="mt-8 text-sm text-gray-400">
+        <summary class="cursor-pointer hover:text-blue-400 font-medium">Password Strength Guide</summary>
+        <div class="mt-2 leading-relaxed text-xs">
+            <p>Strength is estimated based on entropy (bits): &lt; 40 = Weak, 40-60 = Medium, 60-80 = Strong, &gt; 80 = Very Strong.</p>
+            <p>For most purposes, 16+ characters with all character types provides adequate security.</p>
+        </div>
+    </details>
+    <script>
+    const length = document.getElementById('length');
+    const lenDisplay = document.getElementById('lenDisplay');
+    function updateLen() { lenDisplay.textContent = length.value; }
+    function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function generate() {
+        const len = parseInt(length.value);
+        const useUpper = document.getElementById('upper').checked;
+        const useLower = document.getElementById('lower').checked;
+        const useDigits = document.getElementById('digits').checked;
+        const useSymbols = document.getElementById('symbols').checked;
+        const noAmbig = document.getElementById('noAmbiguous').checked;
+        const count = parseInt(document.getElementById('count').value);
+
+        let chars = '';
+        if (useUpper) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if (useLower) chars += 'abcdefghijklmnopqrstuvwxyz';
+        if (useDigits) chars += '0123456789';
+        if (useSymbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        if (noAmbig) chars = chars.replace(/[0OIl1]/g, '');
+        if (!chars) { document.getElementById('passwords').innerHTML = '<p class="text-red-400 text-sm">Select at least one character type.</p>'; return; }
+
+        // Build required set
+        let required = '';
+        if (useUpper) required += pick('ABCDEFGHIJKLMNOPQRSTUVWXYZ'.replace(noAmbig ? /[0OIl1]/g : /^$/, ''));
+        if (useLower) required += pick('abcdefghijklmnopqrstuvwxyz'.replace(noAmbig ? /[0OIl1]/g : /^$/, ''));
+        if (useDigits) required += pick('0123456789'.replace(noAmbig ? /[0OIl1]/g : /^$/, ''));
+        if (useSymbols) required += pick('!@#$%^&*()_+-=[]{}|;:,.<>?');
+
+        const results = [];
+        for (let n = 0; n < count; n++) {
+            let pw = required;
+            while (pw.length < len) pw += pick(chars);
+            pw = pw.split('').sort(() => Math.random() - 0.5).join('');
+
+            // Estimate entropy
+            let pool = 0;
+            if (useUpper) pool += 26;
+            if (useLower) pool += 26;
+            if (useDigits) pool += 10;
+            if (useSymbols) pool += 24;
+            const entropy = Math.round(len * Math.log2(pool));
+            const label = entropy < 40 ? 'Weak' : entropy < 60 ? 'Medium' : entropy < 80 ? 'Strong' : 'Very Strong';
+            const color = entropy < 40 ? 'text-red-400' : entropy < 60 ? 'text-yellow-400' : entropy < 80 ? 'text-green-400' : 'text-emerald-400';
+            results.push({ pw, entropy, label, color });
+        }
+
+        document.getElementById('passwords').innerHTML = results.map((r, i) =>
+            `<div class="flex items-center gap-3 p-3 rounded-lg border border-gray-700 bg-gray-800">
+                <span class="text-xs text-gray-400 w-5">${i+1}.</span>
+                <span class="font-mono text-sm flex-1 select-all">${r.pw}</span>
+                <span class="text-xs ${r.color}">${r.label} (${r.entropy} bits)</span>
+                <button onclick="navigator.clipboard.writeText('${r.pw}')" class="text-xs text-gray-400 hover:text-blue-600">📋</button>
+            </div>`
+        ).join('');
+        document.getElementById('strength').textContent = `Entropy per password: ${results.map(r => r.entropy).join(', ')} bits`;
+    }
+    generate();
+    </script>
+    
+        </div>
+
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/password-generator" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200">View source</a>
+        </div>
+    </div>
+    
+</body>
+</html>

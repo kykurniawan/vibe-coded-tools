@@ -390,6 +390,7 @@
             'url-encoder': 'Encoding',
             'lorem-ipsum': 'Generation',
             'case-converter': 'Conversion',
+            'password-generator': 'Security',
         };
         const CATEGORY_COLORS = {
             'Encoding': { bg: 'rgba(14,165,233,0.12)', text: '#38bdf8', border: 'rgba(14,165,233,0.2)' },
@@ -400,7 +401,7 @@
         };
 
         // Mark which tools are "new" (by ID)
-        const NEW_TOOL_IDS = new Set(['jwt-decoder', 'timestamp-converter']);
+        const NEW_TOOL_IDS = new Set(['password-generator']);
 
         // ─── DOM Refs ───
         const container = document.getElementById('tools-container');
