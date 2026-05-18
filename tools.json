@@ -76,6 +76,13 @@
       "description": "Convert colors between HEX, RGB, HSL, and named colors. Pick colors visually with a color picker.",
       "icon": "\ud83c\udfa8",
       "path": "color-converter/"
+    },
+    {
+      "id": "password-generator",
+      "name": "Password Generator",
+      "description": "Generate strong random passwords with configurable length and character types. Check password strength.",
+      "icon": "\ud83d\udd12",
+      "path": "password-generator/"
     }
   ]
 }
