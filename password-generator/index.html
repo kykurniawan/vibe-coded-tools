@@ -157,14 +157,37 @@
             results.push({ pw, entropy, label, color });
         }
 
-        document.getElementById('passwords').innerHTML = results.map((r, i) =>
-            `<div class="flex items-center gap-3 p-3 rounded-lg border border-gray-700 bg-gray-800">
-                <span class="text-xs text-gray-400 w-5">${i+1}.</span>
-                <span class="font-mono text-sm flex-1 select-all">${r.pw}</span>
-                <span class="text-xs ${r.color}">${r.label} (${r.entropy} bits)</span>
-                <button onclick="navigator.clipboard.writeText('${r.pw}')" class="text-xs text-gray-400 hover:text-blue-600">📋</button>
-            </div>`
-        ).join('');
+        const container = document.getElementById('passwords');
+        container.innerHTML = '';
+        results.forEach((r, i) => {
+            const row = document.createElement('div');
+            row.className = 'flex items-center gap-3 p-3 rounded-lg border border-gray-700 bg-gray-800';
+
+            const num = document.createElement('span');
+            num.className = 'text-xs text-gray-400 w-5';
+            num.textContent = (i + 1) + '.';
+
+            const pwSpan = document.createElement('span');
+            pwSpan.className = 'font-mono text-sm flex-1 select-all';
+            pwSpan.textContent = r.pw;
+
+            const strength = document.createElement('span');
+            strength.className = 'text-xs ' + r.color;
+            strength.textContent = r.label + ' (' + r.entropy + ' bits)';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'text-xs text-gray-400 hover:text-blue-600';
+            copyBtn.textContent = '📋';
+            copyBtn.addEventListener('click', function() {
+                navigator.clipboard.writeText(r.pw);
+            });
+
+            row.appendChild(num);
+            row.appendChild(pwSpan);
+            row.appendChild(strength);
+            row.appendChild(copyBtn);
+            container.appendChild(row);
+        });
         document.getElementById('strength').textContent = `Entropy per password: ${results.map(r => r.entropy).join(', ')} bits`;
     }
     generate();
