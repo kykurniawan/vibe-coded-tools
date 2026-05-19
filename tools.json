@@ -83,6 +83,13 @@
       "description": "Generate strong random passwords with configurable length and character types. Check password strength.",
       "icon": "\ud83d\udd12",
       "path": "password-generator/"
+    },
+    {
+      "id": "regex-tester",
+      "name": "Regex Tester",
+      "description": "Test regular expressions against sample text. Real-time matching with highlight and capture group display.",
+      "icon": "\ud83d\udd0d",
+      "path": "regex-tester/"
     }
   ]
 }

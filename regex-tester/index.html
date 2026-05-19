@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Regex Tester — Vibe-Coded Tools</title>
+    <meta name="description" content="Test regular expressions against sample text. Real-time matching with highlight and capture group display." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔍</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .tool-input[readonly] { cursor: default; }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .status-msg { padding: 0.5rem 0; font-size: 0.8rem; color: #94a3b8; }
+
+        .result-block { background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3); border-radius: 12px; padding: 1rem; transition: border-color 0.2s ease; }
+        .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .result-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: #94a3b8; }
+        .result-pre { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.75rem; line-height: 1.6; background: rgba(2,6,23,0.4); border-radius: 8px; padding: 0.75rem 1rem; overflow-x: auto; color: #e2e8f0; user-select: all; }
+
+        details.tool-details summary { cursor: pointer; font-weight: 500; transition: color 0.2s ease; color: rgba(148,163,184,0.8); }
+        details.tool-details summary:hover { color: #60a5fa; }
+        details.tool-details[open] summary { color: #60a5fa; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+        .fade-in-delay-4 { animation: fadeInUp 0.4s ease-out 0.4s both; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🔍 Regex Tester</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Test regular expressions against sample text. Real-time matching with highlight and capture group display.
+            </p>
+        </div>
+
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <div>
+            <label class="block text-sm font-medium mb-1">Regular Expression</label>
+            <div class="flex gap-2">
+                <input type="text" id="pattern" value="\b[A-Z][a-z]+\b" class="flex-1 px-3 py-2 border border-gray-600 bg-gray-800 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none" oninput="testRegex()" />
+                <input type="text" id="flags" value="gm" class="w-16 px-3 py-2 border border-gray-600 bg-gray-800 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500 outline-none" oninput="testRegex()" placeholder="flags" />
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Common flags: g (global), m (multiline), i (case-insensitive)</p>
+        </div>
+        <div>
+            <label class="block text-sm font-medium mb-1">Replacement (optional)</label>
+            <input type="text" id="replacement" class="w-full px-3 py-2 border border-gray-600 bg-gray-800 rounded-lg text-sm font-mono" placeholder="$1" oninput="testRegex()" />
+        </div>
+    </div>
+    <div class="mb-4">
+        <label class="block text-sm font-medium mb-2">Test Text</label>
+        <textarea id="testText" rows="8" class="w-full px-4 py-3 rounded-lg border border-gray-600 bg-gray-800 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm font-mono" oninput="testRegex()">Hello World! This is a Test.
+The quick brown fox jumps over lazy Dog.
+GITHUB is great for CODE.
+Email: user@example.com</textarea>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+            <h3 class="text-sm font-semibold mb-2">Matches (<span id="matchCount">0</span>)</h3>
+            <pre id="matchesDisplay" class="bg-gray-800 p-3 rounded-lg text-xs font-mono min-h-[80px] overflow-x-auto">—</pre>
+        </div>
+        <div>
+            <h3 class="text-sm font-semibold mb-2">Replaced</h3>
+            <pre id="replacedDisplay" class="bg-gray-800 p-3 rounded-lg text-xs font-mono min-h-[80px] overflow-x-auto">—</pre>
+        </div>
+    </div>
+    <div id="error" class="text-sm text-red-500 mt-2 hidden"></div>
+    <details class="mt-8 text-sm text-gray-400">
+        <summary class="cursor-pointer hover:text-blue-400 font-medium">Regex Quick Reference</summary>
+        <div class="mt-2 leading-relaxed text-xs"><code>. = any char, \\d = digit, \\w = word char, \\s = whitespace, * = 0+, + = 1+, ? = 0/1, ^ = start, $ = end, [abc] = set, (x|y) = alternation</code></div>
+    </details>
+    <script>
+    const pattern = document.getElementById('pattern');
+    const flags = document.getElementById('flags');
+    const testText = document.getElementById('testText');
+    const replacement = document.getElementById('replacement');
+    const matchesDisplay = document.getElementById('matchesDisplay');
+    const replacedDisplay = document.getElementById('replacedDisplay');
+    const matchCount = document.getElementById('matchCount');
+    const error = document.getElementById('error');
+
+    function testRegex() {
+        error.classList.add('hidden');
+        try {
+            const re = new RegExp(pattern.value, flags.value);
+            const text = testText.value;
+            const matches = [...text.matchAll(re)];
+            matchCount.textContent = matches.length;
+            if (matches.length === 0) {
+                matchesDisplay.textContent = '(no matches)';
+            } else {
+matchesDisplay.textContent = matches.map((m, i) => `[${i}] "${m[0]}" (index: ${m.index})`).join('\n');
+            }
+            if (replacement.value !== '') {
+                replacedDisplay.textContent = text.replace(re, replacement.value);
+            } else {
+                replacedDisplay.textContent = '(enter a replacement string)';
+            }
+        } catch (e) {
+            error.textContent = 'Invalid regex: ' + e.message;
+            error.classList.remove('hidden');
+            matchesDisplay.textContent = '(error)';
+            replacedDisplay.textContent = '(error)';
+        }
+    }
+    testRegex();
+    </script>
+    
+        </div>
+
+        <div class="footer-disc mt-10 fade-in-delay-3">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/regex-tester" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200">View source</a>
+        </div>
+    </div>
+    
+</body>
+</html>
