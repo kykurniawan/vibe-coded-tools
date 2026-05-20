@@ -90,6 +90,13 @@
       "description": "Test regular expressions against sample text. Real-time matching with highlight and capture group display.",
       "icon": "\ud83d\udd0d",
       "path": "regex-tester/"
+    },
+    {
+      "id": "text-diff",
+      "name": "Text Diff Checker",
+      "description": "Compare two texts and see the differences highlighted side by side. Useful for code or document comparison.",
+      "icon": "\ud83d\udcca",
+      "path": "text-diff/"
     }
   ]
 }
