@@ -97,6 +97,13 @@
       "description": "Compare two texts and see the differences highlighted side by side. Useful for code or document comparison.",
       "icon": "\ud83d\udcca",
       "path": "text-diff/"
+    },
+    {
+      "id": "number-base",
+      "name": "Number Base Converter",
+      "description": "Convert numbers between binary (base 2), octal (base 8), decimal (base 10), and hexadecimal (base 16).",
+      "icon": "\ud83d\udd22",
+      "path": "number-base/"
     }
   ]
 }
