@@ -104,6 +104,13 @@
       "description": "Convert numbers between binary (base 2), octal (base 8), decimal (base 10), and hexadecimal (base 16).",
       "icon": "\ud83d\udd22",
       "path": "number-base/"
+    },
+    {
+      "id": "image-editor",
+      "name": "Image Editor",
+      "description": "Edit images directly in your browser. Crop, resize, rotate, apply filters, draw, add text — no uploads, 100% client-side.",
+      "icon": "🖼️",
+      "path": "image-editor/"
     }
   ]
 }

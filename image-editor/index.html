@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Editor — Vibe-Coded Tools</title>
+    <meta name="description" content="Edit images directly in your browser. Crop, resize, rotate, apply filters, draw, add text — no uploads, 100% client-side." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🖼️</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden;
+        }
+
+        /* ── Navbar ── */
+        .back-link {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8);
+            text-decoration: none; transition: all 0.2s ease;
+            padding: 0.5rem 0.75rem; border-radius: 8px;
+            background: rgba(30,41,59,0.3); border: 1px solid transparent;
+        }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        /* ── Canvas Container ── */
+        .canvas-wrapper {
+            background: rgba(15,23,42,0.8);
+            border: 2px dashed rgba(51,65,85,0.5);
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+            min-height: 420px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.2s ease;
+        }
+        .canvas-wrapper.drag-over { border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+        .canvas-wrapper canvas { display: block; }
+
+        /* ── Drop Zone Placeholder ── */
+        .drop-placeholder {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 1rem; pointer-events: none;
+            color: rgba(148,163,184,0.6);
+        }
+        .drop-placeholder svg { width: 64px; height: 64px; opacity: 0.4; }
+
+        /* ── Mode Buttons ── */
+        .mode-btn {
+            display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+            padding: 0.625rem 0.875rem; border-radius: 10px;
+            font-size: 0.7rem; font-weight: 500;
+            cursor: pointer; transition: all 0.2s ease;
+            background: rgba(30,41,59,0.3); border: 1px solid rgba(51,65,85,0.3);
+            color: rgba(148,163,184,0.8); min-width: 56px;
+        }
+        .mode-btn svg { width: 22px; height: 22px; }
+        .mode-btn:hover { background: rgba(51,65,85,0.3); color: #e2e8f0; border-color: rgba(71,85,105,0.4); }
+        .mode-btn.active {
+            background: rgba(59,130,246,0.15); color: #60a5fa;
+            border-color: rgba(59,130,246,0.3);
+            box-shadow: 0 0 12px -4px rgba(59,130,246,0.2);
+        }
+
+        /* ── Action Buttons ── */
+        .act-btn {
+            display: inline-flex; align-items: center; gap: 0.375rem;
+            padding: 0.5rem 0.875rem; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 500; cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(30,41,59,0.3); border: 1px solid rgba(51,65,85,0.3);
+            color: rgba(148,163,184,0.8);
+        }
+        .act-btn:hover { background: rgba(51,65,85,0.3); color: #e2e8f0; border-color: rgba(71,85,105,0.4); }
+        .act-btn:disabled { opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+        .act-btn.accent { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.2); }
+        .act-btn.accent:hover { background: rgba(59,130,246,0.18); }
+        .act-btn.export-btn { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border: none; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .act-btn.export-btn:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); }
+
+        /* ── Sliders ── */
+        .slider-group { margin-bottom: 0.75rem; }
+        .slider-group label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.25rem; }
+        .slider-group input[type=range] {
+            width: 100%; height: 6px; -webkit-appearance: none;
+            background: rgba(51,65,85,0.4); border-radius: 3px; outline: none;
+        }
+        .slider-group input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px;
+            border-radius: 50%; background: #3b82f6; cursor: pointer;
+            box-shadow: 0 0 6px rgba(59,130,246,0.3);
+        }
+
+        /* ── Color Picker ── */
+        .color-input { -webkit-appearance: none; width: 32px; height: 32px; border: 2px solid rgba(51,65,85,0.5); border-radius: 8px; cursor: pointer; background: transparent; padding: 0; }
+        .color-input::-webkit-color-swatch-wrapper { padding: 2px; }
+        .color-input::-webkit-color-swatch { border-radius: 5px; border: none; }
+
+        /* ── Size input ── */
+        .size-input {
+            width: 100%; padding: 0.5rem 0.75rem; border-radius: 8px;
+            font-size: 0.8rem; font-family: 'SF Mono','Fira Code',ui-monospace,monospace;
+            outline: none; border: 1px solid rgba(51,65,85,0.4);
+            background: rgba(15,23,42,0.5); color: #e2e8f0;
+            transition: border-color 0.2s ease;
+        }
+        .size-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.06); }
+
+        /* ── Sidebar panel ── */
+        .side-panel {
+            background: rgba(30,41,59,0.3); border: 1px solid rgba(51,65,85,0.3);
+            border-radius: 14px; padding: 1rem;
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        /* ── Animations ── */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.3s ease-out; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .mode-btn { padding: 0.5rem 0.625rem; font-size: 0.65rem; min-width: 44px; }
+            .mode-btn svg { width: 18px; height: 18px; }
+            .act-btn { padding: 0.4rem 0.625rem; font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <!-- ═══ Navbar ═══ -->
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2 text-base font-bold tracking-tight no-underline text-inherit">
+                <span class="text-xl">🔧</span>
+                <span class="hidden sm:inline">Vibe-Coded Tools</span>
+            </a>
+            <span class="text-xs text-gray-500 hidden sm:block">Image Editor</span>
+        </div>
+    </nav>
+
+    <!-- ═══ Main ═══ -->
+    <div class="max-w-7xl mx-auto px-4 pt-20 pb-8">
+
+        <!-- Back link -->
+        <a href="../" class="back-link fade-in mb-4 inline-flex">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <!-- Title + Toolbar Row -->
+        <div class="fade-in flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">🖼️ Image Editor</h1>
+                <p class="text-gray-400 text-sm mt-1">Edit images entirely in your browser — crop, resize, filter, draw, and more.</p>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <input type="file" id="fileInput" accept="image/*" class="hidden" />
+                <button onclick="document.getElementById('fileInput').click()" class="act-btn accent">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Open Image
+                </button>
+                <button onclick="undo()" class="act-btn" id="undoBtn" disabled>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                </button>
+                <button onclick="redo()" class="act-btn" id="redoBtn" disabled>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6"/></svg>
+                </button>
+                <button onclick="showExport()" class="act-btn export-btn" id="exportBtn" disabled>Export</button>
+            </div>
+        </div>
+
+        <!-- ═══ Layout: Sidebar + Canvas ═══ -->
+        <div class="fade-in flex flex-col lg:flex-row gap-4">
+
+            <!-- Left: Mode Toolbar -->
+            <div class="flex lg:flex-col gap-1.5 flex-wrap justify-center lg:justify-start">
+                <button class="mode-btn active" data-mode="select" onclick="setMode('select')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+                    <span>Select</span>
+                </button>
+                <button class="mode-btn" data-mode="crop" onclick="setMode('crop')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v2m0 8v2a2 2 0 002 2h2m8 0h2a2 2 0 002-2v-2m0-8V6a2 2 0 00-2-2h-2"/></svg>
+                    <span>Crop</span>
+                </button>
+                <button class="mode-btn" data-mode="draw" onclick="setMode('draw')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    <span>Draw</span>
+                </button>
+                <button class="mode-btn" data-mode="text" onclick="setMode('text')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>
+                    <span>Text</span>
+                </button>
+                <button class="mode-btn" data-mode="adjust" onclick="setMode('adjust')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+                    <span>Adjust</span>
+                </button>
+            </div>
+
+            <!-- Center: Canvas -->
+            <div class="flex-1">
+                <div class="canvas-wrapper" id="canvasWrapper">
+                    <canvas id="editorCanvas"></canvas>
+                    <div class="drop-placeholder" id="dropPlaceholder">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <span class="text-sm">Drag & drop an image here, or click <b>Open Image</b></span>
+                    </div>
+                </div>
+
+                <!-- Quick Actions Bar -->
+                <div class="flex items-center gap-2 mt-3 flex-wrap" id="quickActions" style="display:none">
+                    <button onclick="rotateLeft()" class="act-btn" title="Rotate Left">↺ 90°</button>
+                    <button onclick="rotateRight()" class="act-btn" title="Rotate Right">↻ 90°</button>
+                    <button onclick="flipH()" class="act-btn" title="Flip Horizontal">↔ Flip</button>
+                    <button onclick="flipV()" class="act-btn" title="Flip Vertical">↕ Flip</button>
+                    <button onclick="resetAdjustments()" class="act-btn" style="color:#f87171">Reset Adjust</button>
+                </div>
+            </div>
+
+            <!-- Right: Contextual Sidebar -->
+            <div class="w-full lg:w-64 shrink-0 space-y-3" id="sidePanels">
+                <!-- Select Panel (default) -->
+                <div class="side-panel" id="panelSelect">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-2">Selection</h3>
+                    <p class="text-xs text-gray-500">Click any object on the canvas to select it. Drag to move. Use corner handles to resize.</p>
+                    <button onclick="deleteSelected()" class="act-btn mt-3 w-full justify-center" style="color:#f87171; border-color: rgba(239,68,68,0.2);">Delete Selected</button>
+                </div>
+
+                <!-- Crop Panel -->
+                <div class="side-panel" id="panelCrop" style="display:none">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-3">Crop</h3>
+                    <p class="text-xs text-gray-500 mb-3">Drag the selection box on the image, then apply.</p>
+                    <button onclick="applyCrop()" class="act-btn accent w-full justify-center mb-2">Apply Crop</button>
+                    <button onclick="cancelCrop()" class="act-btn w-full justify-center">Cancel</button>
+                </div>
+
+                <!-- Draw Panel -->
+                <div class="side-panel" id="panelDraw" style="display:none">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-3">Brush</h3>
+                    <div class="slider-group">
+                        <label>Size <span id="brushSizeVal">4px</span></label>
+                        <input type="range" id="brushSize" min="1" max="40" value="4" oninput="updateBrush()" />
+                    </div>
+                    <label class="text-xs text-gray-500 mb-1 block">Color</label>
+                    <input type="color" id="brushColor" value="#60a5fa" class="color-input mb-3" onchange="updateBrush()" />
+                    <button onclick="clearDrawings()" class="act-btn w-full justify-center" style="color:#f87171">Clear Drawings</button>
+                </div>
+
+                <!-- Text Panel -->
+                <div class="side-panel" id="panelText" style="display:none">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-3">Add Text</h3>
+                    <input type="text" id="textInput" class="size-input mb-2" placeholder="Type text..." value="Hello" />
+                    <div class="slider-group">
+                        <label>Font Size <span id="fontSizeVal">32px</span></label>
+                        <input type="range" id="fontSize" min="8" max="120" value="32" oninput="document.getElementById('fontSizeVal').textContent=this.value+'px'" />
+                    </div>
+                    <label class="text-xs text-gray-500 mb-1 block">Color</label>
+                    <input type="color" id="textColor" value="#ffffff" class="color-input mb-3" />
+                    <button onclick="addText()" class="act-btn accent w-full justify-center">Add Text</button>
+                </div>
+
+                <!-- Adjust Panel -->
+                <div class="side-panel" id="panelAdjust" style="display:none">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-3">Image Adjustments</h3>
+                    <div class="slider-group">
+                        <label>Brightness <span id="brightnessVal">0</span></label>
+                        <input type="range" id="brightness" min="-100" max="100" value="0" oninput="applyFilter('brightness')" />
+                    </div>
+                    <div class="slider-group">
+                        <label>Contrast <span id="contrastVal">0</span></label>
+                        <input type="range" id="contrast" min="-100" max="100" value="0" oninput="applyFilter('contrast')" />
+                    </div>
+                    <div class="slider-group">
+                        <label>Saturation <span id="saturationVal">0</span></label>
+                        <input type="range" id="saturation" min="-100" max="100" value="0" oninput="applyFilter('saturation')" />
+                    </div>
+                    <div class="slider-group">
+                        <label>Blur <span id="blurVal">0px</span></label>
+                        <input type="range" id="blur" min="0" max="20" value="0" oninput="applyFilter('blur')" />
+                    </div>
+                </div>
+
+                <!-- Resize Panel (always visible after load) -->
+                <div class="side-panel" id="panelResize" style="display:none">
+                    <h3 class="text-sm font-semibold text-gray-300 mb-3">Resize</h3>
+                    <div class="flex items-center gap-2 mb-2">
+                        <input type="number" id="resizeW" class="size-input w-20" placeholder="W" />
+                        <span class="text-gray-500 text-xs">×</span>
+                        <input type="number" id="resizeH" class="size-input w-20" placeholder="H" />
+                    </div>
+                    <label class="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                        <input type="checkbox" id="lockAspect" checked onchange="updateResizeInputs()" class="rounded" />
+                        Lock aspect ratio
+                    </label>
+                    <button onclick="applyResize()" class="act-btn accent w-full justify-center">Resize</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Disclaimer -->
+        <div class="mt-8 max-w-4xl mx-auto rounded-xl p-4 text-xs leading-relaxed" style="background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8);">
+            <strong class="block mb-1 text-amber-300">⚠️ AI-Generated Content Disclaimer</strong>
+            This tool is generated by AI with minimum human intervention. All processing happens 100% in your browser — no images are ever uploaded to any server. Export quality depends on your browser's Canvas implementation.
+        </div>
+    </div>
+
+    <!-- ═══ Export Modal ═══ -->
+    <div id="exportModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
+        <div style="background:rgba(30,41,59,0.95); border:1px solid rgba(51,65,85,0.5); border-radius:16px; padding:1.5rem; min-width:300px; max-width:400px;" onclick="event.stopPropagation()">
+            <h3 class="text-lg font-bold mb-4">Export Image</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-gray-400 mb-1 block">Format</label>
+                    <select id="exportFormat" class="size-input" onchange="updateExportExt()">
+                        <option value="png">PNG</option>
+                        <option value="jpeg">JPEG</option>
+                        <option value="webp">WebP</option>
+                    </select>
+                </div>
+                <div id="qualityGroup">
+                    <label class="text-xs text-gray-400 mb-1 block">Quality <span id="qualityVal">90%</span></label>
+                    <input type="range" id="exportQuality" min="10" max="100" value="90" oninput="document.getElementById('qualityVal').textContent=this.value+'%'" class="w-full" />
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 mb-1 block">Filename</label>
+                    <input type="text" id="exportFilename" class="size-input" value="edited-image" />
+                    <span class="text-xs text-gray-500" id="exportExt">.png</span>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button onclick="doExport()" class="act-btn export-btn flex-1 justify-center">Download</button>
+                    <button onclick="closeExport()" class="act-btn flex-1 justify-center">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════
+        // State
+        // ═══════════════════════════════════════
+        let canvas, fabricCanvas;
+        let currentMode = 'select';
+        let undoStack = [], redoStack = [];
+        let cropRect = null;
+        let originalImage = null;
+        let imageLoaded = false;
+        let isDrawing = false;
+        let drawColor = '#60a5fa', drawWidth = 4;
+
+        // ═══════════════════════════════════════
+        // Init Fabric Canvas
+        // ═══════════════════════════════════════
+        function initCanvas() {
+            canvas = document.getElementById('editorCanvas');
+            fabricCanvas = new fabric.Canvas(canvas, {
+                width: 800,
+                height: 500,
+                backgroundColor: 'transparent',
+                selection: true,
+                preserveObjectStacking: true,
+            });
+
+            // Track state changes for undo/redo
+            fabricCanvas.on('object:modified', saveState);
+            fabricCanvas.on('object:added', (e) => {
+                if (e.target && e.target !== cropRect && !e.target._fromUndo) saveState();
+            });
+            fabricCanvas.on('object:removed', (e) => {
+                if (e.target && e.target !== cropRect && !e.target._fromUndo) saveState();
+            });
+
+            updateCanvasSize();
+            window.addEventListener('resize', updateCanvasSize);
+        }
+
+        function updateCanvasSize() {
+            const wrapper = document.getElementById('canvasWrapper');
+            const w = wrapper.clientWidth - 4;
+            const h = Math.max(420, Math.min(window.innerHeight * 0.55, 600));
+            fabricCanvas.setWidth(w);
+            fabricCanvas.setHeight(h);
+            if (originalImage) {
+                fitImageToCanvas();
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // Image Loading
+        // ═══════════════════════════════════════
+        function loadImage(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                fabric.Image.fromURL(e.target.result, (img) => {
+                    fabricCanvas.clear();
+                    undoStack = []; redoStack = [];
+                    updateUndoRedo();
+
+                    originalImage = img;
+                    img.set({ selectable: true, evented: true });
+                    fitImageToCanvas();
+                    fabricCanvas.add(img);
+                    fabricCanvas.renderAll();
+
+                    imageLoaded = true;
+                    document.getElementById('dropPlaceholder').style.display = 'none';
+                    document.getElementById('quickActions').style.display = 'flex';
+                    document.getElementById('exportBtn').disabled = false;
+                    document.getElementById('panelResize').style.display = 'block';
+                    updateResizeInputs();
+                    saveState();
+                }, { crossOrigin: 'anonymous' });
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function fitImageToCanvas() {
+            if (!originalImage) return;
+            const cw = fabricCanvas.width - 40;
+            const ch = fabricCanvas.height - 40;
+            const scale = Math.min(cw / originalImage.width, ch / originalImage.height, 1);
+            originalImage.set({
+                scaleX: scale,
+                scaleY: scale,
+                left: fabricCanvas.width / 2,
+                top: fabricCanvas.height / 2,
+                originX: 'center',
+                originY: 'center',
+            });
+            fabricCanvas.renderAll();
+        }
+
+        // ═══════════════════════════════════════
+        // Drag & Drop
+        // ═══════════════════════════════════════
+        const wrapper = document.getElementById('canvasWrapper');
+        wrapper.addEventListener('dragover', (e) => { e.preventDefault(); wrapper.classList.add('drag-over'); });
+        wrapper.addEventListener('dragleave', () => wrapper.classList.remove('drag-over'));
+        wrapper.addEventListener('drop', (e) => {
+            e.preventDefault();
+            wrapper.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) loadImage(file);
+        });
+
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            if (e.target.files[0]) loadImage(e.target.files[0]);
+        });
+
+        // Also support paste
+        document.addEventListener('paste', (e) => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (const item of items) {
+                if (item.type.startsWith('image/')) {
+                    loadImage(item.getAsFile());
+                    break;
+                }
+            }
+        });
+
+        // ═══════════════════════════════════════
+        // Mode Switching
+        // ═══════════════════════════════════════
+        function setMode(mode) {
+            if (!imageLoaded) return;
+
+            currentMode = mode;
+            // Update mode buttons
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`.mode-btn[data-mode="${mode}"]`)?.classList.add('active');
+
+            // Hide all panels
+            document.querySelectorAll('#sidePanels .side-panel').forEach(p => p.style.display = 'none');
+
+            // Cancel crop if switching away
+            if (cropRect) cancelCrop();
+
+            // Set canvas interaction
+            fabricCanvas.isDrawingMode = false;
+            fabricCanvas.selection = true;
+
+            switch (mode) {
+                case 'select':
+                    document.getElementById('panelSelect').style.display = 'block';
+                    fabricCanvas.selection = true;
+                    fabricCanvas.getObjects().forEach(o => o.set({ selectable: true, evented: true }));
+                    break;
+                case 'crop':
+                    document.getElementById('panelCrop').style.display = 'block';
+                    startCrop();
+                    break;
+                case 'draw':
+                    document.getElementById('panelDraw').style.display = 'block';
+                    startDraw();
+                    break;
+                case 'text':
+                    document.getElementById('panelText').style.display = 'block';
+                    fabricCanvas.selection = true;
+                    break;
+                case 'adjust':
+                    document.getElementById('panelAdjust').style.display = 'block';
+                    fabricCanvas.selection = true;
+                    break;
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // Crop
+        // ═══════════════════════════════════════
+        function startCrop() {
+            if (!originalImage) return;
+            fabricCanvas.selection = false;
+            fabricCanvas.getObjects().forEach(o => o.set({ selectable: false, evented: false }));
+
+            const img = originalImage;
+            cropRect = new fabric.Rect({
+                left: img.left - (img.width * img.scaleX) / 4,
+                top: img.top - (img.height * img.scaleY) / 4,
+                width: (img.width * img.scaleX) / 2,
+                height: (img.height * img.scaleY) / 2,
+                fill: 'rgba(59,130,246,0.1)',
+                stroke: '#3b82f6',
+                strokeWidth: 2,
+                strokeDashArray: [6, 3],
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true,
+                lockRotation: true,
+                cornerColor: '#3b82f6',
+                cornerSize: 10,
+            });
+            fabricCanvas.add(cropRect);
+            fabricCanvas.setActiveObject(cropRect);
+            fabricCanvas.renderAll();
+        }
+
+        function applyCrop() {
+            if (!cropRect || !originalImage) return;
+            saveState();
+
+            const img = originalImage;
+            const scaleX = img.scaleX, scaleY = img.scaleY;
+
+            // Calculate crop coordinates relative to original image
+            const cropLeft = (cropRect.left - img.left) / scaleX + img.width / 2;
+            const cropTop = (cropRect.top - img.top) / scaleY + img.height / 2;
+            const cropW = cropRect.width * img.width / (img.width * scaleX);
+            const cropH = cropRect.height * img.height / (img.height * scaleY);
+
+            fabricCanvas.remove(cropRect);
+            cropRect = null;
+
+            // Use canvas to crop
+            const tempCanvas = document.createElement('canvas');
+            const origEl = img.getElement();
+            tempCanvas.width = Math.round(cropW * origEl.naturalWidth / img.width);
+            tempCanvas.height = Math.round(cropH * origEl.naturalHeight / img.height);
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(origEl,
+                Math.round(cropLeft * origEl.naturalWidth / img.width),
+                Math.round(cropTop * origEl.naturalHeight / img.height),
+                Math.round(cropW * origEl.naturalWidth / img.width),
+                Math.round(cropH * origEl.naturalHeight / img.height),
+                0, 0, tempCanvas.width, tempCanvas.height);
+
+            tempCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                fabricCanvas.clear();
+                fabric.Image.fromURL(url, (newImg) => {
+                    originalImage = newImg;
+                    newImg.set({ selectable: true, evented: true });
+                    fitImageToCanvas();
+                    fabricCanvas.add(newImg);
+                    fabricCanvas.renderAll();
+                    URL.revokeObjectURL(url);
+                    setMode('select');
+                });
+            });
+        }
+
+        function cancelCrop() {
+            if (cropRect) {
+                fabricCanvas.remove(cropRect);
+                cropRect = null;
+            }
+            fabricCanvas.selection = true;
+            fabricCanvas.getObjects().forEach(o => o.set({ selectable: true, evented: true }));
+            fabricCanvas.renderAll();
+        }
+
+        // ═══════════════════════════════════════
+        // Draw
+        // ═══════════════════════════════════════
+        function startDraw() {
+            fabricCanvas.isDrawingMode = true;
+            fabricCanvas.selection = false;
+            updateBrush();
+        }
+
+        function updateBrush() {
+            drawWidth = parseInt(document.getElementById('brushSize').value);
+            drawColor = document.getElementById('brushColor').value;
+            document.getElementById('brushSizeVal').textContent = drawWidth + 'px';
+
+            fabricCanvas.freeDrawingBrush.width = drawWidth;
+            fabricCanvas.freeDrawingBrush.color = drawColor;
+            fabricCanvas.freeDrawingBrush.opacity = 0.9;
+        }
+
+        function clearDrawings() {
+            const objs = fabricCanvas.getObjects().filter(o =>
+                o.type === 'path' || o.type === 'group'
+            );
+            objs.forEach(o => fabricCanvas.remove(o));
+            saveState();
+            fabricCanvas.renderAll();
+        }
+
+        // ═══════════════════════════════════════
+        // Text
+        // ═══════════════════════════════════════
+        function addText() {
+            const text = document.getElementById('textInput').value || 'Text';
+            const fontSize = parseInt(document.getElementById('fontSize').value);
+            const color = document.getElementById('textColor').value;
+
+            const textObj = new fabric.Textbox(text, {
+                left: fabricCanvas.width / 2,
+                top: fabricCanvas.height / 2,
+                fontSize: fontSize,
+                fill: color,
+                fontFamily: 'Arial, sans-serif',
+                originX: 'center',
+                originY: 'center',
+                editable: true,
+            });
+            fabricCanvas.add(textObj);
+            fabricCanvas.setActiveObject(textObj);
+            saveState();
+            fabricCanvas.renderAll();
+        }
+
+        // ═══════════════════════════════════════
+        // Adjustments (CSS filters on image)
+        // ═══════════════════════════════════════
+        function applyFilter(type) {
+            if (!originalImage) return;
+            const brightness = parseInt(document.getElementById('brightness').value);
+            const contrast = parseInt(document.getElementById('contrast').value);
+            const saturation = parseInt(document.getElementById('saturation').value);
+            const blur = parseInt(document.getElementById('blur').value);
+
+            // Update labels
+            document.getElementById('brightnessVal').textContent = brightness;
+            document.getElementById('contrastVal').textContent = contrast;
+            document.getElementById('saturationVal').textContent = saturation;
+            document.getElementById('blurVal').textContent = blur + 'px';
+
+            const filterStr = [
+                `brightness(${100 + brightness}%)`,
+                `contrast(${100 + contrast}%)`,
+                `saturate(${100 + saturation}%)`,
+                `blur(${blur}px)`,
+            ].join(' ');
+
+            // Apply to the main image via a Fabric filter
+            const f = new fabric.Image.filters.BlendColor({
+                color: '#000',
+                mode: 'multiply',
+                alpha: brightness < 0 ? Math.abs(brightness) / 100 : 0,
+            });
+
+            // Clear existing filters
+            originalImage.filters = [];
+
+            // Brightness
+            if (brightness !== 0) {
+                originalImage.filters.push(new fabric.Image.filters.Brightness({ brightness: brightness / 100 }));
+            }
+            // Contrast
+            if (contrast !== 0) {
+                originalImage.filters.push(new fabric.Image.filters.Contrast({ contrast: contrast / 100 }));
+            }
+            // Saturation
+            if (saturation !== 0) {
+                originalImage.filters.push(new fabric.Image.filters.Saturation({ saturation: saturation / 100 }));
+            }
+            // Blur
+            if (blur > 0) {
+                originalImage.filters.push(new fabric.Image.filters.Blur({ blur: blur / 3 }));
+            }
+
+            originalImage.applyFilters();
+            fabricCanvas.renderAll();
+        }
+
+        function resetAdjustments() {
+            document.getElementById('brightness').value = 0;
+            document.getElementById('contrast').value = 0;
+            document.getElementById('saturation').value = 0;
+            document.getElementById('blur').value = 0;
+            document.getElementById('brightnessVal').textContent = '0';
+            document.getElementById('contrastVal').textContent = '0';
+            document.getElementById('saturationVal').textContent = '0';
+            document.getElementById('blurVal').textContent = '0px';
+            if (originalImage) {
+                originalImage.filters = [];
+                originalImage.applyFilters();
+                fabricCanvas.renderAll();
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // Transform
+        // ═══════════════════════════════════════
+        function rotateLeft() {
+            if (!originalImage) return;
+            saveState();
+            originalImage.rotate(originalImage.angle - 90);
+            fitImageToCanvas();
+            fabricCanvas.renderAll();
+        }
+        function rotateRight() {
+            if (!originalImage) return;
+            saveState();
+            originalImage.rotate(originalImage.angle + 90);
+            fitImageToCanvas();
+            fabricCanvas.renderAll();
+        }
+        function flipH() {
+            if (!originalImage) return;
+            saveState();
+            originalImage.set('flipX', !originalImage.flipX);
+            fabricCanvas.renderAll();
+        }
+        function flipV() {
+            if (!originalImage) return;
+            saveState();
+            originalImage.set('flipY', !originalImage.flipY);
+            fabricCanvas.renderAll();
+        }
+
+        // ═══════════════════════════════════════
+        // Resize
+        // ═══════════════════════════════════════
+        function updateResizeInputs() {
+            if (!originalImage) return;
+            document.getElementById('resizeW').value = Math.round(originalImage.width * originalImage.scaleX);
+            document.getElementById('resizeH').value = Math.round(originalImage.height * originalImage.scaleY);
+        }
+
+        document.getElementById('resizeW').addEventListener('input', function() {
+            if (document.getElementById('lockAspect').checked && originalImage) {
+                const ratio = originalImage.height / originalImage.width;
+                document.getElementById('resizeH').value = Math.round(this.value * ratio);
+            }
+        });
+        document.getElementById('resizeH').addEventListener('input', function() {
+            if (document.getElementById('lockAspect').checked && originalImage) {
+                const ratio = originalImage.width / originalImage.height;
+                document.getElementById('resizeW').value = Math.round(this.value * ratio);
+            }
+        });
+
+        function applyResize() {
+            if (!originalImage) return;
+            const w = parseInt(document.getElementById('resizeW').value);
+            const h = parseInt(document.getElementById('resizeH').value);
+            if (!w || !h || w < 1 || h < 1) return;
+
+            saveState();
+
+            const origEl = originalImage.getElement();
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.drawImage(origEl, 0, 0, w, h);
+
+            tempCanvas.toBlob((blob) => {
+                const url = URL.createObjectURL(blob);
+                const oldFilters = [...originalImage.filters];
+                fabricCanvas.remove(originalImage);
+                fabric.Image.fromURL(url, (newImg) => {
+                    originalImage = newImg;
+                    newImg.set({ selectable: true, evented: true });
+                    newImg.filters = oldFilters;
+                    newImg.applyFilters();
+                    fitImageToCanvas();
+                    fabricCanvas.add(newImg);
+                    fabricCanvas.sendToBack(newImg);
+                    fabricCanvas.renderAll();
+                    URL.revokeObjectURL(url);
+                    updateResizeInputs();
+                });
+            });
+        }
+
+        // ═══════════════════════════════════════
+        // Delete
+        // ═══════════════════════════════════════
+        function deleteSelected() {
+            const obj = fabricCanvas.getActiveObject();
+            if (obj && obj !== originalImage) {
+                fabricCanvas.remove(obj);
+                saveState();
+                fabricCanvas.renderAll();
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // Undo / Redo
+        // ═══════════════════════════════════════
+        function saveState() {
+            const state = JSON.stringify(fabricCanvas.toJSON(['selectable', 'evented', 'filters']));
+            undoStack.push(state);
+            if (undoStack.length > 50) undoStack.shift();
+            redoStack = [];
+            updateUndoRedo();
+        }
+
+        function undo() {
+            if (undoStack.length < 2) return;
+            const current = undoStack.pop();
+            redoStack.push(current);
+            const prev = undoStack[undoStack.length - 1];
+            loadState(prev);
+            updateUndoRedo();
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+            const next = redoStack.pop();
+            undoStack.push(next);
+            loadState(next);
+            updateUndoRedo();
+        }
+
+        function loadState(json) {
+            fabricCanvas.loadFromJSON(json, () => {
+                fabricCanvas.renderAll();
+                // Restore originalImage reference
+                const objs = fabricCanvas.getObjects();
+                const imgObj = objs.find(o => o.type === 'image');
+                if (imgObj) originalImage = imgObj;
+                if (!originalImage) {
+                    imageLoaded = false;
+                    document.getElementById('dropPlaceholder').style.display = 'flex';
+                    document.getElementById('quickActions').style.display = 'none';
+                    document.getElementById('exportBtn').disabled = true;
+                    document.getElementById('panelResize').style.display = 'none';
+                }
+            });
+        }
+
+        function updateUndoRedo() {
+            document.getElementById('undoBtn').disabled = undoStack.length < 2;
+            document.getElementById('redoBtn').disabled = redoStack.length === 0;
+        }
+
+        // ═══════════════════════════════════════
+        // Export
+        // ═══════════════════════════════════════
+        function showExport() {
+            document.getElementById('exportModal').style.display = 'flex';
+            document.getElementById('qualityGroup').style.display =
+                document.getElementById('exportFormat').value === 'png' ? 'none' : 'block';
+        }
+
+        function closeExport() {
+            document.getElementById('exportModal').style.display = 'none';
+        }
+
+        function updateExportExt() {
+            const fmt = document.getElementById('exportFormat').value;
+            document.getElementById('exportExt').textContent = '.' + fmt;
+            document.getElementById('qualityGroup').style.display = fmt === 'png' ? 'none' : 'block';
+        }
+
+        function doExport() {
+            const fmt = document.getElementById('exportFormat').value;
+            const quality = parseInt(document.getElementById('exportQuality').value) / 100;
+            const filename = document.getElementById('exportFilename').value || 'edited-image';
+
+            // Ensure all filters are applied
+            if (originalImage && originalImage.filters?.length > 0) {
+                originalImage.applyFilters();
+            }
+
+            const dataURL = fabricCanvas.toDataURL({
+                format: fmt,
+                quality: quality,
+                multiplier: 1,
+            });
+
+            const link = document.createElement('a');
+            link.download = filename + '.' + fmt;
+            link.href = dataURL;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            closeExport();
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('exportModal').addEventListener('click', closeExport);
+
+        // ═══════════════════════════════════════
+        // Keyboard Shortcuts
+        // ═══════════════════════════════════════
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
+            if (e.key === 'Delete' || e.key === 'Backspace') deleteSelected();
+            if (e.key === 'Escape') cancelCrop();
+        });
+
+        // ═══════════════════════════════════════
+        // Init
+        // ═══════════════════════════════════════
+        initCanvas();
+        console.log('🖼️ Image Editor ready. Open an image to start.');
+    </script>
+</body>
+</html>

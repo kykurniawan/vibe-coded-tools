@@ -391,6 +391,7 @@
             'lorem-ipsum': 'Generation',
             'case-converter': 'Conversion',
             'password-generator': 'Security',
+            'image-editor': 'Image',
         };
         const CATEGORY_COLORS = {
             'Encoding': { bg: 'rgba(14,165,233,0.12)', text: '#38bdf8', border: 'rgba(14,165,233,0.2)' },
@@ -398,10 +399,11 @@
             'Security': { bg: 'rgba(239,68,68,0.12)', text: '#f87171', border: 'rgba(239,68,68,0.2)' },
             'Developer Tools': { bg: 'rgba(34,197,94,0.12)', text: '#4ade80', border: 'rgba(34,197,94,0.2)' },
             'Conversion': { bg: 'rgba(251,191,36,0.12)', text: '#fbbf24', border: 'rgba(251,191,36,0.2)' },
+            'Image': { bg: 'rgba(236,72,153,0.12)', text: '#f472b6', border: 'rgba(236,72,153,0.2)' },
         };
 
         // Mark which tools are "new" (by ID)
-        const NEW_TOOL_IDS = new Set(['password-generator']);
+        const NEW_TOOL_IDS = new Set(['image-editor']);
 
         // ─── DOM Refs ───
         const container = document.getElementById('tools-container');
