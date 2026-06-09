@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VS Code Theme Generator — Vibe-Coded Tools</title>
+    <meta name="description" content="Create custom VS Code themes from a primary color. Preview with live syntax highlighting and download the JSON." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎨</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .tool-input[readonly] { cursor: default; }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .tool-select { width: 100%; padding: 0.75rem 1rem; border-radius: 12px; font-size: 0.875rem; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; }
+        .tool-select:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-select option { background: #1e293b; color: #e2e8f0; }
+
+        .result-block { background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3); border-radius: 12px; padding: 1rem; transition: border-color 0.2s ease; }
+        .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .result-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: #94a3b8; }
+        .result-pre { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.75rem; line-height: 1.6; background: rgba(2,6,23,0.4); border-radius: 8px; padding: 0.75rem 1rem; overflow-x: auto; color: #e2e8f0; user-select: all; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+        .fade-in-delay-4 { animation: fadeInUp 0.4s ease-out 0.4s both; }
+
+        #codePreview { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.82rem; line-height: 1.7; border-radius: 10px; padding: 1rem; overflow-x: auto; white-space: pre; tab-size: 2; }
+        #codePreview .kw { font-weight: 600; }
+        #codePreview .cm { font-style: italic; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🎨 VS Code Theme Generator</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Create custom VS Code themes from a primary color. Preview with live syntax highlighting and download the JSON.
+            </p>
+        </div>
+
+        <!-- Controls -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <!-- Primary Color -->
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="primaryColor">Primary Accent</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="primaryColor" value="#007acc" class="w-10 h-10 rounded-lg border border-gray-600 cursor-pointer shrink-0" />
+                        <input type="text" id="primaryHex" value="#007acc" maxlength="7" class="tool-input font-mono text-sm" />
+                    </div>
+                </div>
+                <!-- Variant -->
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="variantSelect">Variant</label>
+                    <select id="variantSelect" class="tool-select">
+                        <option value="dark-modern">Dark Modern</option>
+                        <option value="dark-plus">Dark+</option>
+                        <option value="light-modern">Light Modern</option>
+                        <option value="light-plus">Light+</option>
+                        <option value="high-contrast">High Contrast</option>
+                    </select>
+                </div>
+                <!-- Background Override -->
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="bgColor">Background (optional)</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="bgColor" value="#1e1e1e" class="w-10 h-10 rounded-lg border border-gray-600 cursor-pointer shrink-0" />
+                        <input type="text" id="bgHex" value="#1e1e1e" maxlength="7" class="tool-input font-mono text-sm" placeholder="Auto" />
+                    </div>
+                </div>
+                <!-- Theme Name -->
+                <div>
+                    <label class="block text-sm font-medium mb-2" for="themeName">Theme Name</label>
+                    <input type="text" id="themeName" value="Oceanic Blue Dark" class="tool-input text-sm" />
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-2">
+                <button onclick="generateTheme()" class="btn-primary text-sm">✨ Generate Theme</button>
+                <button onclick="downloadTheme()" class="btn-secondary text-sm">⬇️ Download JSON</button>
+                <button onclick="copyTheme()" class="btn-secondary text-sm">📋 Copy JSON</button>
+            </div>
+        </div>
+
+        <!-- Live Code Preview -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-3 mt-6">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-gray-300">🔮 Live Code Preview</h2>
+                <span class="text-xs text-gray-500">Syntax-colored with your theme</span>
+            </div>
+            <div id="codePreview" class="border border-gray-700/30"></div>
+        </div>
+
+        <!-- Generated Theme JSON -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-4 mt-6">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-sm font-semibold text-gray-300">📄 Theme JSON</h2>
+                <div class="flex gap-2">
+                    <button onclick="copyTheme()" class="btn-ghost text-xs">📋 Copy</button>
+                    <button onclick="downloadTheme()" class="btn-ghost text-xs">⬇️ Download</button>
+                </div>
+            </div>
+            <pre id="themeOutput" class="result-pre max-h-[500px] overflow-y-auto" style="font-size:0.7rem; line-height:1.5;">Click "Generate Theme" to create your VS Code theme.</pre>
+        </div>
+
+        <div class="footer-disc mt-10 fade-in-delay-4">
+            ⚠️ AI-generated tool — verify output before relying on it.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/vscode-theme-generator" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200">View source</a>
+        </div>
+    </div>
+
+<script>
+// ─── Color Utilities ───
+
+function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return {
+        r: parseInt(h.slice(0, 2), 16),
+        g: parseInt(h.slice(2, 4), 16),
+        b: parseInt(h.slice(4, 6), 16)
+    };
+}
+
+function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(c => Math.round(Math.max(0, Math.min(255, c))).toString(16).padStart(2, '0')).join('');
+}
+
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        else if (max === g) h = ((b - r) / d + 2) / 6;
+        else h = ((r - g) / d + 4) / 6;
+    }
+    return { h: h * 360, s: s * 100, l: l * 100 };
+}
+
+function hslToRgb(h, s, l) {
+    h /= 360; s /= 100; l /= 100;
+    let r, g, b;
+    if (s === 0) { r = g = b = l; }
+    else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1/6) return p + (q - p) * 6 * t;
+            if (t < 1/2) return q;
+            if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1/3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1/3);
+    }
+    return { r: r * 255, g: g * 255, b: b * 255 };
+}
+
+function lighten(hex, amount) {
+    const c = hexToRgb(hex);
+    return rgbToHex(c.r + (255 - c.r) * amount, c.g + (255 - c.g) * amount, c.b + (255 - c.b) * amount);
+}
+
+function darken(hex, amount) {
+    const c = hexToRgb(hex);
+    return rgbToHex(c.r * (1 - amount), c.g * (1 - amount), c.b * (1 - amount));
+}
+
+function blend(hex1, hex2, ratio) {
+    const a = hexToRgb(hex1), b = hexToRgb(hex2);
+    return rgbToHex(
+        a.r * (1 - ratio) + b.r * ratio,
+        a.g * (1 - ratio) + b.g * ratio,
+        a.b * (1 - ratio) + b.b * ratio
+    );
+}
+
+function alpha(hex, opacity) {
+    const c = hexToRgb(hex);
+    return `rgba(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)},${opacity})`;
+}
+
+function hexToRgba(hex, opacity) {
+    const c = hexToRgb(hex);
+    return `rgba(${Math.round(c.r)},${Math.round(c.g)},${Math.round(c.b)},${opacity})`;
+}
+
+function setSaturation(hex, sat) {
+    const c = hexToRgb(hex);
+    const hsl = rgbToHsl(c.r, c.g, c.b);
+    const rgb = hslToRgb(hsl.h, sat, hsl.l);
+    return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+function setLightness(hex, light) {
+    const c = hexToRgb(hex);
+    const hsl = rgbToHsl(c.r, c.g, c.b);
+    const rgb = hslToRgb(hsl.h, hsl.s, light);
+    return rgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+function isLight(hex) {
+    const c = hexToRgb(hex);
+    return (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255 > 0.5;
+}
+
+// ─── Variant Configs ───
+
+const VARIANTS = {
+    'dark-modern': {
+        type: 'dark',
+        name: 'Dark Modern',
+        bg: '#1e1e1e',
+        sidebar: '#252526',
+        activity: '#333333',
+        tab: '#2d2d2d',
+        input: '#3c3c3c',
+        fg: '#cccccc',
+        fgBright: '#e0e0e0',
+        fgDim: '#969696',
+        border: '#474747',
+        lineHighlight: 'rgba(255,255,255,0.04)',
+        selection: 'rgba(0,122,204,0.3)',
+    },
+    'dark-plus': {
+        type: 'dark',
+        name: 'Dark+',
+        bg: '#1e1e1e',
+        sidebar: '#252526',
+        activity: '#333333',
+        tab: '#2d2d2d',
+        input: '#3c3c3c',
+        fg: '#d4d4d4',
+        fgBright: '#e8e8e8',
+        fgDim: '#858585',
+        border: '#474747',
+        lineHighlight: 'rgba(255,255,255,0.04)',
+        selection: 'rgba(0,122,204,0.3)',
+    },
+    'light-modern': {
+        type: 'light',
+        bg: '#ffffff',
+        sidebar: '#f3f3f3',
+        activity: '#ececec',
+        tab: '#ececec',
+        input: '#ffffff',
+        fg: '#333333',
+        fgBright: '#1a1a1a',
+        fgDim: '#767676',
+        border: '#e0e0e0',
+        lineHighlight: 'rgba(0,0,0,0.04)',
+        selection: 'rgba(0,122,204,0.15)',
+    },
+    'light-plus': {
+        type: 'light',
+        bg: '#ffffff',
+        sidebar: '#f3f3f3',
+        activity: '#ececec',
+        tab: '#ececec',
+        input: '#ffffff',
+        fg: '#333333',
+        fgBright: '#1a1a1a',
+        fgDim: '#6e6e6e',
+        border: '#d4d4d4',
+        lineHighlight: 'rgba(0,0,0,0.04)',
+        selection: 'rgba(0,122,204,0.15)',
+    },
+    'high-contrast': {
+        type: 'dark',
+        bg: '#000000',
+        sidebar: '#000000',
+        activity: '#000000',
+        tab: '#000000',
+        input: '#000000',
+        fg: '#ffffff',
+        fgBright: '#ffffff',
+        fgDim: '#a0a0a0',
+        border: '#6fc3df',
+        lineHighlight: 'rgba(111,195,223,0.08)',
+        selection: 'rgba(111,195,223,0.4)',
+    },
+};
+
+function capitalize(str) {
+    return str.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// ─── Theme Generation ───
+
+let currentTheme = null;
+
+function generateTheme() {
+    const primaryHex = document.getElementById('primaryHex').value.trim() || '#007acc';
+    const variantKey = document.getElementById('variantSelect').value;
+    const bgOverride = document.getElementById('bgHex').value.trim();
+    const themeName = document.getElementById('themeName').value.trim() || 'Custom Theme';
+
+    const variant = VARIANTS[variantKey];
+    const isDark = variant.type === 'dark';
+
+    const bg = bgOverride || variant.bg;
+    const accent = primaryHex;
+
+    // Derive colors
+    const sidebar = bgOverride ? darken(bg, 0.05) : variant.sidebar;
+    const activityBar = bgOverride ? darken(bg, 0.1) : variant.activity;
+    const tabBg = bgOverride ? blend(bg, variant.tab, 0.5) : variant.tab;
+    const inputBg = bgOverride ? lighten(bg, isDark ? 0.1 : 0.02) : variant.input;
+
+    const fg = isDark ? (isLight(bg) ? '#333' : variant.fg) : (isLight(bg) ? variant.fg : '#ccc');
+    const fgBright = isDark ? (isLight(bg) ? '#1a1a1a' : variant.fgBright) : (isLight(bg) ? variant.fgBright : '#e0e0e0');
+    const fgDim = isDark ? (isLight(bg) ? '#888' : variant.fgDim) : (isLight(bg) ? variant.fgDim : '#999');
+
+    const lineHL = isDark ? alpha(isLight(bg) ? '#000' : '#fff', 0.04) : alpha('#000', 0.04);
+    const selectionHL = alpha(accent, isDark ? 0.3 : 0.15);
+
+    // Token colors derived from accent
+    const keywordColor = setLightness(accent, isDark ? 70 : 45);
+    const stringColor = isDark ? '#ce9178' : '#a31515';
+    const numberColor = isDark ? '#b5cea8' : '#098658';
+    const commentColor = isDark ? '#6a9955' : '#008000';
+    const functionColor = lighten(accent, isDark ? 0.15 : -0.15);
+    const typeColor = isDark ? '#4ec9b0' : '#267f99';
+    const variableColor = isDark ? '#9cdcfe' : '#001080';
+    const supportColor = isDark ? '#c586c0' : '#795e26';
+
+    const borderColor = isDark ? alpha(bg, 0.2) : alpha('#000', 0.12);
+
+    const theme = {
+        $schema: 'vscode://schemas/color-theme',
+        name: themeName,
+        type: isDark ? 'dark' : 'light',
+        colors: {
+            'editor.background': bg,
+            'editor.foreground': fg,
+            'editorCursor.foreground': accent,
+            'editor.selectionBackground': selectionHL,
+            'editor.selectionHighlightBackground': alpha(accent, isDark ? 0.12 : 0.06),
+            'editor.lineHighlightBackground': lineHL,
+            'editorLineNumber.foreground': fgDim,
+            'editorLineNumber.activeForeground': fg,
+            'editorGutter.background': bg,
+            'editorBracketMatch.background': alpha(accent, 0.15),
+            'editorBracketMatch.border': alpha(accent, 0.3),
+            'sideBar.background': sidebar,
+            'sideBar.foreground': fg,
+            'sideBarTitle.foreground': fgBright,
+            'sideBar.border': borderColor,
+            'activityBar.background': activityBar,
+            'activityBar.foreground': fgBright,
+            'activityBar.inactiveForeground': fgDim,
+            'activityBar.border': borderColor,
+            'statusBar.background': darken(accent, isDark ? 0.2 : 0.1),
+            'statusBar.foreground': '#ffffff',
+            'statusBar.border': borderColor,
+            'titleBar.activeBackground': bg,
+            'titleBar.activeForeground': fgBright,
+            'titleBar.inactiveBackground': darken(bg, 0.03),
+            'titleBar.inactiveForeground': fgDim,
+            'tab.activeBackground': tabBg,
+            'tab.inactiveBackground': darken(bg, isDark ? 0.05 : 0.02),
+            'tab.activeForeground': fgBright,
+            'tab.inactiveForeground': fgDim,
+            'tab.border': borderColor,
+            'tab.activeBorder': accent,
+            'tab.hoverBackground': alpha(accent, 0.06),
+            'input.background': inputBg,
+            'input.foreground': fg,
+            'input.border': borderColor,
+            'input.placeholderForeground': fgDim,
+            'editorWidget.background': darken(bg, isDark ? 0.05 : 0.02),
+            'editorWidget.border': borderColor,
+            'list.activeSelectionBackground': alpha(accent, isDark ? 0.25 : 0.12),
+            'list.activeSelectionForeground': fgBright,
+            'list.inactiveSelectionBackground': alpha(accent, isDark ? 0.12 : 0.06),
+            'list.hoverBackground': alpha(accent, isDark ? 0.08 : 0.04),
+            'list.hoverForeground': fg,
+            'notifications.background': darken(bg, isDark ? 0.08 : 0.03),
+            'notifications.foreground': fg,
+            'notificationCenter.border': borderColor,
+            'notificationCenterHeader.background': darken(bg, isDark ? 0.1 : 0.05),
+            'pickerGroup.foreground': accent,
+            'pickerGroup.border': borderColor,
+            'button.background': accent,
+            'button.foreground': '#ffffff',
+            'button.hoverBackground': lighten(accent, 0.1),
+            'dropdown.background': inputBg,
+            'dropdown.foreground': fg,
+            'dropdown.border': borderColor,
+            'focusBorder': alpha(accent, 0.5),
+            'scrollbar.shadow': alpha('#000', 0.3),
+            'scrollbarSlider.background': alpha(fg, 0.15),
+            'scrollbarSlider.hoverBackground': alpha(fg, 0.25),
+            'scrollbarSlider.activeBackground': alpha(fg, 0.35),
+            'badge.background': accent,
+            'badge.foreground': '#ffffff',
+            'progressBar.background': accent,
+            'panel.background': bg,
+            'panel.border': borderColor,
+            'panelTitle.activeForeground': accent,
+            'panelTitle.inactiveForeground': fgDim,
+            'breadcrumb.foreground': fgDim,
+            'breadcrumb.focusForeground': fg,
+            'breadcrumb.activeSelectionForeground': accent,
+            'menu.background': sidebar,
+            'menu.foreground': fg,
+            'menu.selectionBackground': alpha(accent, 0.2),
+            'menu.selectionForeground': fgBright,
+            'menu.separatorBackground': borderColor,
+            'minimap.background': alpha(bg, 0.5),
+        },
+        tokenColors: [
+            { scope: 'comment', settings: { foreground: commentColor, fontStyle: 'italic' } },
+            { scope: ['keyword', 'storage', 'storage.type'], settings: { foreground: keywordColor } },
+            { scope: ['string', 'string.quoted', 'string.regexp'], settings: { foreground: stringColor } },
+            { scope: 'constant.numeric', settings: { foreground: numberColor } },
+            { scope: 'entity.name.function', settings: { foreground: functionColor } },
+            { scope: ['variable.language', 'variable.parameter'], settings: { foreground: variableColor } },
+            { scope: ['entity.name.type', 'entity.name.class'], settings: { foreground: typeColor } },
+            { scope: ['support.function', 'support.type.property-name'], settings: { foreground: supportColor } },
+            { scope: 'constant.language', settings: { foreground: supportColor } },
+            { scope: 'invalid', settings: { foreground: '#f44747' } },
+            { scope: 'markup.heading', settings: { foreground: functionColor, fontStyle: 'bold' } },
+            { scope: 'markup.italic', settings: { fontStyle: 'italic' } },
+            { scope: 'markup.bold', settings: { fontStyle: 'bold' } },
+            { scope: 'markup.underline.link', settings: { foreground: accent, fontStyle: 'underline' } },
+        ],
+        semanticTokenColors: {
+            newOperator: { foreground: keywordColor },
+            stringLiteral: { foreground: stringColor },
+            propertyDeclaration: { foreground: functionColor },
+            memberBracket: { foreground: fg },
+            typeParameter: { foreground: typeColor },
+        },
+    };
+
+    currentTheme = theme;
+    renderTheme(theme);
+    renderCodePreview(theme);
+
+    // Sync color picker with hex input
+    document.getElementById('primaryColor').value = primaryHex;
+}
+
+function renderTheme(theme) {
+    document.getElementById('themeOutput').textContent = JSON.stringify(theme, null, 2);
+}
+
+// ─── Syntax Highlighting Preview ───
+
+const SAMPLE_CODE = `import { useState, useEffect } from 'react';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+const API_BASE = 'https://api.example.com';
+
+async function fetchUsers(): Promise<User[]> {
+  try {
+    const response = await fetch(\`\${API_BASE}/users\`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch users');
+    }
+    const data: User[] = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error:', error.message);
+    return [];
+  }
+}
+
+export default function UserList() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchUsers()
+      .then(data => setUsers(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div className="spinner">Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
+
+  return (
+    <ul className="user-list">
+      {users.map(user => (
+        <li key={user.id}>
+          <strong>{user.name}</strong>
+          <span>{user.email}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}`;
+
+function renderCodePreview(theme) {
+    const el = document.getElementById('codePreview');
+    const tc = {};
+    // Map token scopes to colors
+    for (const entry of theme.tokenColors) {
+        const scopes = Array.isArray(entry.scope) ? entry.scope : [entry.scope];
+        for (const scope of scopes) {
+            tc[scope] = entry.settings.foreground;
+        }
+    }
+    // Semantic tokens
+    if (theme.semanticTokenColors) {
+        for (const [key, val] of Object.entries(theme.semanticTokenColors)) {
+            tc['semantic.' + key] = val.foreground;
+        }
+    }
+
+    const colors = tc;
+    const bg = theme.colors['editor.background'];
+    const fg = theme.colors['editor.foreground'];
+
+    // Simple tokenizer
+    const tokenize = (code) => {
+        const tokens = [];
+        const lines = code.split('\n');
+        for (const line of lines) {
+            let i = 0;
+            while (i < line.length) {
+                // Comments
+                if (line.slice(i, i + 2) === '//') {
+                    tokens.push({ text: line.slice(i), scope: 'comment' });
+                    i = line.length;
+                    continue;
+                }
+                // Strings (template literals, double, single)
+                const strMatch = line.slice(i).match(/^(['"`])(?:(?!\1|\\).|\\.)*\1/);
+                if (strMatch) {
+                    tokens.push({ text: strMatch[0], scope: 'string' });
+                    i += strMatch[0].length;
+                    continue;
+                }
+                // Template literal expr \${...}
+                if (line[i] === '$' && i + 1 < line.length && line[i + 1] === '{') {
+                    tokens.push({ text: '${', scope: 'keyword' });
+                    i += 2;
+                    continue;
+                }
+                // Numbers
+                if (/\d/.test(line[i]) && (i === 0 || /[\s,=(\[<>\+\-\*\/%!:|&]/.test(line[i - 1]))) {
+                    const num = line.slice(i).match(/^\d+(\.\d+)?/);
+                    if (num) {
+                        tokens.push({ text: num[0], scope: 'constant.numeric' });
+                        i += num[0].length;
+                        continue;
+                    }
+                }
+                // JSX tags
+                if (line[i] === '<') {
+                    const tag = line.slice(i).match(/^<\/?[a-zA-Z][\w.]*(?:\s|$|\/?>)/);
+                    if (tag) {
+                        tokens.push({ text: tag[0], scope: 'entity.name.type' });
+                        i += tag[0].length;
+                        continue;
+                    }
+                }
+                // JSX closing
+                if (line[i] === '/' && i + 1 < line.length && line[i + 1] === '>') {
+                    tokens.push({ text: '/>', scope: 'entity.name.type' });
+                    i += 2;
+                    continue;
+                }
+                // JSX self-closing end
+                // Keywords
+                const word = line.slice(i).match(/^[a-zA-Z_$][\w$]*/);
+                if (word) {
+                    const kw = ['import', 'from', 'return', 'if', 'else', 'try', 'catch', 'throw', 'new', 'async', 'await', 'export', 'default', 'const', 'let', 'var', 'function', 'interface', 'extends', 'type', 'typeof', 'instanceof', 'in', 'of', 'class', 'finally', 'switch', 'case', 'break', 'continue', 'for', 'while', 'do', 'this', 'super', 'yield', 'delete', 'void', 'null', 'undefined', 'true', 'false'];
+                    const types = ['string', 'number', 'boolean', 'void', 'never', 'any', 'unknown', 'Promise', 'User', 'User[]'];
+                    const wordVal = word[0];
+                    if (kw.includes(wordVal)) {
+                        tokens.push({ text: wordVal, scope: 'keyword' });
+                    } else if (types.includes(wordVal) || wordVal[0] === wordVal[0].toUpperCase() && wordVal === wordVal[0].toUpperCase() + wordVal.slice(1)) {
+                        tokens.push({ text: wordVal, scope: 'entity.name.type' });
+                    } else if (i > 0 && (line[i - 1] === '.' || line.slice(Math.max(0, i - 6), i).match(/(?:as|from|import)\s$/))) {
+                        tokens.push({ text: wordVal, scope: 'support.function' });
+                    } else if (i > 0 && line.slice(Math.max(0, i - 4), i).match(/^(?:\.|->)$/)) {
+                        tokens.push({ text: wordVal, scope: 'support.function' });
+                    } else {
+                        // check if it's a function: word followed by (
+                        const rest = line.slice(i + wordVal.length).trimStart();
+                        if (rest[0] === '(' && wordVal[0] === wordVal[0].toLowerCase()) {
+                            tokens.push({ text: wordVal, scope: 'entity.name.function' });
+                        } else {
+                            tokens.push({ text: wordVal, scope: 'variable' });
+                        }
+                    }
+                    i += word[0].length;
+                    continue;
+                }
+                // Operators / punctuation
+                tokens.push({ text: line[i], scope: '' });
+                i++;
+            }
+            tokens.push({ text: '\n', scope: '' });
+        }
+        return tokens;
+    };
+
+    const tokens = tokenize(SAMPLE_CODE);
+
+    // Build HTML with inline styles
+    const scopeStyles = {
+        'comment': `color: ${colors['comment'] || '#6a9955'}; font-style: italic;`,
+        'string': `color: ${colors['string'] || '#ce9178'};`,
+        'keyword': `color: ${colors['keyword'] || '#569cd6'}; font-weight: 600;`,
+        'constant.numeric': `color: ${colors['constant.numeric'] || '#b5cea8'};`,
+        'entity.name.function': `color: ${colors['entity.name.function'] || '#dcdcaa'};`,
+        'entity.name.type': `color: ${colors['entity.name.type'] || '#4ec9b0'};`,
+        'variable': `color: ${fg};`,
+        'support.function': `color: ${colors['support.function'] || '#c586c0'};`,
+        '': `color: ${fg};`,
+    };
+
+    let html = tokens.map(t => {
+        const style = scopeStyles[t.scope] || `color: ${fg};`;
+        return `<span style="${style}">${escapeHtml(t.text)}</span>`;
+    }).join('');
+
+    // Add span wrapping for each line to preserve spacing
+    el.style.background = bg;
+    el.style.color = fg;
+    el.innerHTML = html;
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ─── Actions ───
+
+function copyTheme() {
+    if (!currentTheme) { generateTheme(); }
+    const text = JSON.stringify(currentTheme, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+        const btn = document.querySelector('[onclick="copyTheme()"]');
+        const orig = btn.textContent;
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = orig, 2000);
+    }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+    });
+}
+
+function downloadTheme() {
+    if (!currentTheme) { generateTheme(); }
+    const text = JSON.stringify(currentTheme, null, 2);
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (currentTheme.name || 'theme').toLowerCase().replace(/\s+/g, '-') + '-theme.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ─── Synced Inputs ───
+
+document.addEventListener('DOMContentLoaded', () => {
+    const primaryColor = document.getElementById('primaryColor');
+    const primaryHex = document.getElementById('primaryHex');
+    const bgColor = document.getElementById('bgColor');
+    const bgHex = document.getElementById('bgHex');
+    const variantSelect = document.getElementById('variantSelect');
+    const themeName = document.getElementById('themeName');
+
+    primaryColor.addEventListener('input', () => {
+        primaryHex.value = primaryColor.value;
+    });
+    primaryHex.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(primaryHex.value)) {
+            primaryColor.value = primaryHex.value;
+        }
+    });
+    bgColor.addEventListener('input', () => {
+        bgHex.value = bgColor.value;
+    });
+    bgHex.addEventListener('input', () => {
+        if (/^#[0-9a-f]{6}$/i.test(bgHex.value)) {
+            bgColor.value = bgHex.value;
+        }
+    });
+
+    // Auto-update theme name when variant changes
+    variantSelect.addEventListener('change', () => {
+        const variant = variantSelect.value;
+        const primary = primaryHex.value || '#007acc';
+        const accentName = getColorName(primary);
+        const variantName = VARIANTS[variant].name;
+        themeName.value = `${accentName} ${variantName}`;
+    });
+
+    primaryHex.addEventListener('change', () => {
+        const variant = variantSelect.value;
+        const primary = primaryHex.value || '#007acc';
+        const accentName = getColorName(primary);
+        const variantName = VARIANTS[variant].name;
+        themeName.value = `${accentName} ${variantName}`;
+    });
+
+    // Auto-generate on any change (debounced)
+    let debounceTimer;
+    const debounceGenerate = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(generateTheme, 300);
+    };
+    primaryColor.addEventListener('input', debounceGenerate);
+    primaryHex.addEventListener('input', debounceGenerate);
+    variantSelect.addEventListener('change', debounceGenerate);
+    bgColor.addEventListener('input', debounceGenerate);
+    bgHex.addEventListener('input', debounceGenerate);
+    themeName.addEventListener('input', debounceGenerate);
+
+    // Generate on load
+    generateTheme();
+});
+
+function getColorName(hex) {
+    const c = hexToRgb(hex);
+    const sat = rgbToHsl(c.r, c.g, c.b).s;
+    const light = rgbToHsl(c.r, c.g, c.b).l;
+
+    const hueNames = [
+        [0, 20, 'Red'], [20, 45, 'Orange'], [45, 75, 'Yellow'],
+        [75, 150, 'Green'], [150, 200, 'Teal'], [200, 250, 'Blue'],
+        [250, 290, 'Purple'], [290, 330, 'Pink'], [330, 360, 'Red']
+    ];
+    const h = rgbToHsl(c.r, c.g, c.b).h;
+    let hueName = 'Blue';
+    for (const [min, max, name] of hueNames) {
+        if (h >= min && h < max) { hueName = name; break; }
+    }
+
+    if (sat < 10) return light > 70 ? 'Light Gray' : light > 30 ? 'Gray' : 'Dark Gray';
+    if (light > 70) return `Light ${hueName}`;
+    if (light < 25) return `Dark ${hueName}`;
+    return hueName;
+}
+</script>
+</body>
+</html>
