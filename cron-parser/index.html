@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cron Expression Parser — Vibe-Coded Tools</title>
+    <meta name="description" content="Parse cron expressions, get a human-readable schedule description, and compute the next run times. Supports 5-field and 6-field cron syntax." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+        .btn-ghost.active { background: rgba(59,130,246,0.12); color: #60a5fa; border-color: rgba(59,130,246,0.25); }
+
+        .result-block { background: rgba(15,23,42,0.3); border: 1px solid rgba(51,65,85,0.3); border-radius: 12px; padding: 1rem; transition: border-color 0.2s ease; }
+        .result-block:hover { border-color: rgba(59,130,246,0.15); }
+        .result-label { font-size: 0.8125rem; font-weight: 600; margin-bottom: 0.5rem; color: #94a3b8; }
+        .result-pre { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.875rem; line-height: 1.7; color: #e2e8f0; }
+
+        .error-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem; line-height: 1.5; }
+
+        .run-item { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.625rem 0; border-bottom: 1px solid rgba(51,65,85,0.25); font-size: 0.875rem; }
+        .run-item:last-child { border-bottom: none; }
+        .run-time { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; color: #e2e8f0; }
+        .run-relative { color: #64748b; font-size: 0.75rem; white-space: nowrap; }
+
+        .field-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+        .field-table th { text-align: left; color: #64748b; font-weight: 600; padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(51,65,85,0.4); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .field-table td { padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(51,65,85,0.2); color: #cbd5e1; vertical-align: top; }
+        .field-table tr:last-child td { border-bottom: none; }
+        .field-table .f-name { color: #94a3b8; font-weight: 500; white-space: nowrap; }
+        .field-table .f-raw { font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; color: #60a5fa; white-space: nowrap; }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-3xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">⏰ Cron Expression Parser</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Parse cron expressions into a human-readable schedule and compute the next run times. Supports standard 5-field and 6-field (seconds) syntax. 100% client-side — your expressions never leave the browser.
+            </p>
+        </div>
+
+        <!-- Input -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <label class="block text-sm font-medium mb-2" for="cronInput">Cron Expression</label>
+            <input type="text" id="cronInput" class="tool-input" placeholder="*/15 * * * *" value="*/15 * * * *" spellcheck="false" autocomplete="off" />
+            <p class="text-xs text-gray-500 mt-2" id="formatHint">5-field format: <span class="font-mono">minute hour day-of-month month day-of-week</span> · 6-field adds <span class="font-mono">seconds</span> first</p>
+
+            <div class="flex flex-wrap gap-2 mt-4" id="presets">
+                <span class="text-xs text-gray-500 self-center mr-1">Presets:</span>
+            </div>
+        </div>
+
+        <!-- Error -->
+        <div id="errorBox" class="error-box hidden fade-in mt-4"></div>
+
+        <!-- Results -->
+        <div id="results" class="mt-4 space-y-4 hidden">
+            <div class="result-block fade-in">
+                <div class="result-label">📖 Schedule</div>
+                <div id="scheduleDesc" class="result-pre"></div>
+            </div>
+
+            <div class="result-block fade-in">
+                <div class="result-label">🔮 Next Runs (local time)</div>
+                <div id="nextRuns"></div>
+            </div>
+
+            <div class="result-block fade-in">
+                <div class="result-label">🧩 Field Breakdown</div>
+                <div class="overflow-x-auto">
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Expression</th>
+                                <th>Matches</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fieldTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-disc fade-in-delay-3 mt-6">
+            ⚠️ <strong>Notes:</strong> When both day-of-month and day-of-week are restricted, a day matches if <em>either</em> field matches (standard cron OR rule).
+            <span class="font-mono">L</span> is supported for day-of-month (last day of month) and day-of-week (Saturday).
+            <span class="font-mono">W</span> and <span class="font-mono">#</span> are not supported yet.
+            Day-of-week accepts <span class="font-mono">0–7</span> (both 0 and 7 = Sunday) and 3-letter names (<span class="font-mono">SUN–SAT</span>, <span class="font-mono">JAN–DEC</span>).
+        </div>
+    </div>
+
+    <script>
+        // ─── Constants ───
+        const MONTHS = { JAN: 1, FEB: 2, MAR: 3, APR: 4, MAY: 5, JUN: 6, JUL: 7, AUG: 8, SEP: 9, OCT: 10, NOV: 11, DEC: 12 };
+        const DOWS = { SUN: 0, MON: 1, TUE: 2, WED: 3, THU: 4, FRI: 5, SAT: 6 };
+        const DOW_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        const FIELD_SPECS = {
+            second: { key: 'second', name: 'second', min: 0, max: 59, names: null, allowL: false },
+            minute: { key: 'minute', name: 'minute', min: 0, max: 59, names: null, allowL: false },
+            hour:   { key: 'hour', name: 'hour', min: 0, max: 23, names: null, allowL: false },
+            dom:    { key: 'dom', name: 'day-of-month', min: 1, max: 31, names: null, allowL: true },
+            month:  { key: 'month', name: 'month', min: 1, max: 12, names: MONTHS, allowL: false },
+            dow:    { key: 'dow', name: 'day-of-week', min: 0, max: 7, names: DOWS, allowL: true },
+        };
+
+        const PRESETS = [
+            { label: 'every minute', expr: '* * * * *' },
+            { label: 'every 15 min', expr: '*/15 * * * *' },
+            { label: 'every 30 min', expr: '*/30 * * * *' },
+            { label: 'hourly', expr: '0 * * * *' },
+            { label: 'daily 09:00', expr: '0 9 * * *' },
+            { label: 'weekdays 09:00', expr: '0 9 * * 1-5' },
+            { label: 'work hours', expr: '*/30 9-18 * * 1-5' },
+            { label: 'weekly Sun 02:00', expr: '0 2 * * 0' },
+            { label: 'monthly 1st', expr: '0 0 1 * *' },
+            { label: 'every 2 days', expr: '0 0 */2 * *' },
+            { label: 'last day midnight', expr: '0 0 L * *' },
+            { label: 'with seconds', expr: '*/10 0 * * * *' },
+        ];
+
+        // ─── Field parsing ───
+        function parseField(raw, spec) {
+            let text = raw.trim();
+            if (text === '?') text = '*';
+            if (text.toUpperCase() === 'L') {
+                if (!spec.allowL) throw new Error(`'L' is not valid in the ${spec.name} field`);
+                return { raw, isStar: false, special: 'L', values: [] };
+            }
+            if (/[wW]/.test(text) && /W/.test(text)) throw new Error(`'W' (nearest weekday) is not supported yet — found in "${spec.name}": ${raw}`);
+            if (text.includes('#')) throw new Error(`'#' (nth weekday) is not supported yet — found in "${spec.name}": ${raw}`);
+
+            const values = new Set();
+            let isStar = text === '*';
+
+            const norm = (token) => {
+                const t = token.trim().toUpperCase();
+                if (spec.names && spec.names[t] !== undefined) return spec.names[t];
+                if (/^\d+$/.test(t)) return parseInt(t, 10);
+                if (spec.names) throw new Error(`Unknown name "${token}" in ${spec.name} field (expected 3-letter names like ${Object.keys(spec.names).slice(0, 3).join(', ')}…)`);
+                throw new Error(`Invalid value "${token}" in ${spec.name} field`);
+            };
+
+            for (const part of text.split(',')) {
+                const p = part.trim();
+                if (!p) throw new Error(`Empty list item in ${spec.name} field`);
+                let step = 1;
+                let range = p;
+                if (p.includes('/')) {
+                    const [r, s] = p.split('/');
+                    range = r;
+                    step = parseInt(s, 10);
+                    if (!(Number.isInteger(step) && step >= 1)) throw new Error(`Invalid step in "${p}" (${spec.name} field)`);
+                }
+                if (range === '*') {
+                    for (let v = spec.min; v <= spec.max; v += step) values.add(spec.key === 'dow' && v === 7 ? 0 : v);
+                    continue;
+                }
+                let lo, hi;
+                if (range.includes('-')) {
+                    const [a, b] = range.split('-');
+                    lo = norm(a); hi = norm(b);
+                } else {
+                    lo = norm(range); hi = lo;
+                }
+                if (lo < spec.min || lo > spec.max) throw new Error(`Value out of range in "${p}" (${spec.name} field must be ${spec.min}-${spec.max})`);
+
+                if (spec.key === 'dow') {
+                    // Allow wrapped ranges (e.g. FRI-MON = 5,6,0,1) and map 7 -> 0
+                    if (hi < spec.min || hi > spec.max) throw new Error(`Value out of range in "${p}" (${spec.name} field must be ${spec.min}-${spec.max})`);
+                    let v = lo;
+                    let guard = 0;
+                    while (guard < 30) {
+                        guard++;
+                        values.add(v === 7 ? 0 : v);
+                        if (v === hi) break;
+                        v = v >= spec.max ? spec.min : v + 1;
+                    }
+                } else {
+                    if (lo > hi) throw new Error(`Range start > end in "${p}" (${spec.name} field)`);
+                    for (let v = lo; v <= hi; v += step) values.add(v);
+                }
+            }
+            return { raw, isStar, special: null, values: [...values].sort((a, b) => a - b) };
+        }
+
+        function lastDayOfMonth(date) {
+            return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        }
+
+        function matches(date, f) {
+            if (!f.month.values.includes(date.getMonth() + 1)) return false;
+
+            const domMatch = f.dom.special === 'L'
+                ? date.getDate() === lastDayOfMonth(date)
+                : f.dom.values.includes(date.getDate());
+            const dowMatch = f.dow.values.includes(date.getDay());
+
+            let dayOk;
+            if (!f.dom.isStar && !f.dow.isStar) dayOk = domMatch || dowMatch;
+            else if (!f.dom.isStar) dayOk = domMatch;
+            else if (!f.dow.isStar) dayOk = dowMatch;
+            else dayOk = true;
+            if (!dayOk) return false;
+
+            if (!f.hour.values.includes(date.getHours())) return false;
+            if (!f.minute.values.includes(date.getMinutes())) return false;
+            if (f.hasSeconds && !f.second.values.includes(date.getSeconds())) return false;
+            return true;
+        }
+
+        function nextRuns(now, f, count = 5) {
+            const out = [];
+            const lookaheadMs = 5 * 365 * 24 * 3600 * 1000;
+            const stepMs = f.hasSeconds ? 60000 : 60000;
+            const base = new Date(now.getTime() + stepMs);
+            const end = now.getTime() + lookaheadMs;
+
+            if (f.hasSeconds) {
+                // Iterate minutes, then pick the earliest matching second in that minute.
+                const secs = f.second.special ? [0] : f.second.values;
+                for (let t = base.getTime(); t < end && out.length < count; t += stepMs) {
+                    const d = new Date(t);
+                    if (matches(d, { ...f, hasSeconds: false })) {
+                        d.setSeconds(secs[0] ?? 0);
+                        d.setMilliseconds(0);
+                        if (d.getTime() > now.getTime()) out.push(d);
+                    }
+                }
+            } else {
+                for (let t = base.getTime(); t < end && out.length < count; t += stepMs) {
+                    const d = new Date(t);
+                    d.setMilliseconds(0);
+                    if (matches(d, f)) out.push(d);
+                }
+            }
+            return out;
+        }
+
+        // ─── Description builder ───
+        function fmtField(values, unit, unitPlural) {
+            if (values.length === 1) return `${values[0]} ${unit}`;
+            if (values.length <= 5) return values.join(', ') + ' ' + unitPlural;
+            return `${values[0]}–${values[values.length - 1]} ${unitPlural}`;
+        }
+
+        function describe(f, hasSeconds) {
+            const parts = [];
+            if (hasSeconds) {
+                const s = f.second;
+                if (s.special) parts.push('at second 0');
+                else if (s.isStar) parts.push('every second');
+                else if (s.values.length === 1) parts.push(`at second ${s.values[0]}`);
+                else parts.push(`at seconds ${s.values.join(', ')}`);
+            }
+            const m = f.minute, h = f.hour;
+            if (m.isStar && h.isStar) {
+                parts.push(hasSeconds ? 'of every minute' : 'every minute');
+            } else if (m.values.length === 1 && h.isStar) {
+                parts.push(`at minute ${m.values[0]} past every hour`);
+            } else if (m.values.length === 1 && h.values.length === 1) {
+                parts.push(`at ${String(h.values[0]).padStart(2, '0')}:${String(m.values[0]).padStart(2, '0')}`);
+            } else if (m.isStar && h.values.length === 1) {
+                parts.push(`every minute of hour ${h.values[0]}`);
+            } else if (m.values.length <= 5 && h.isStar) {
+                parts.push(`at minutes ${m.values.join(', ')} past every hour`);
+            } else {
+                parts.push(`minute ${fmtField(m.values, 'minute', 'minutes')}, hour ${fmtField(h.values, 'hour', 'hours')}`);
+            }
+
+            const dom = f.dom, dow = f.dow;
+            const dowIsAll = dow.isStar;
+            const domIsAll = dom.isStar;
+            if (!domIsAll && !dowIsAll) {
+                const domTxt = dom.special === 'L' ? 'the last day of the month' : `day-of-month ${fmtField(dom.values, 'day', 'days')}`;
+                const dowTxt = `day-of-week ${fmtField(dow.values.map(d => DOW_NAMES[d]), 'day', 'days')}`;
+                parts.push(`on ${domTxt} or ${dowTxt}`);
+            } else if (!domIsAll) {
+                parts.push(dom.special === 'L' ? 'on the last day of the month' : `on day-of-month ${fmtField(dom.values, 'day', 'days')}`);
+            } else if (!dowIsAll) {
+                const names = dow.values.map(d => DOW_NAMES[d]);
+                parts.push(names.length <= 5 ? `on ${names.join(', ')}` : `on ${names[0]}–${names[names.length - 1]}`);
+            }
+
+            const mo = f.month;
+            if (!mo.isStar) {
+                parts.push(mo.values.length <= 5
+                    ? `in ${mo.values.map(v => MONTH_NAMES[v - 1]).join(', ')}`
+                    : `in ${MONTH_NAMES[mo.values[0] - 1]}–${MONTH_NAMES[mo.values[mo.values.length - 1] - 1]}`);
+            }
+            return parts.join(' ') || 'every minute';
+        }
+
+        // ─── Rendering ───
+        const $ = (id) => document.getElementById(id);
+
+        function render(runs, f) {
+            $('nextRuns').innerHTML = runs.map((d) => {
+                const diff = d.getTime() - Date.now();
+                const mins = Math.floor(diff / 60000);
+                const rel = diff < 60000 ? 'in < 1 min' : `in ${mins} min`;
+                const opts = { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: f.hasSeconds ? '2-digit' : undefined };
+                return `<div class="run-item"><span class="run-time">${d.toLocaleString(undefined, opts)}</span><span class="run-relative">${rel}</span></div>`;
+            }).join('');
+        }
+
+        function renderFields(f) {
+            const order = ['second', 'minute', 'hour', 'dom', 'month', 'dow'];
+            const labels = { second: 'Seconds', minute: 'Minutes', hour: 'Hours', dom: 'Day of Month', month: 'Month', dow: 'Day of Week' };
+            $('fieldTable').innerHTML = order.filter(k => f[k]).map((k) => {
+                const spec = f[k];
+                let matches;
+                if (spec.special === 'L') {
+                    matches = k === 'dom' ? 'L — last day of month' : 'L — Saturday (last day of week)';
+                } else if (spec.values.length === 0) {
+                    matches = '—';
+                } else if (spec.values.length > 12) {
+                    matches = `${spec.values.length} values (${spec.values.slice(0, 8).join(', ')}, … ${spec.values[spec.values.length - 1]})`;
+                } else {
+                    matches = spec.values.join(', ');
+                }
+                return `<tr><td class="f-name">${labels[k]}</td><td class="f-raw">${spec.raw}</td><td>${matches}</td></tr>`;
+            }).join('');
+        }
+
+        function parse(expr) {
+            const fields = expr.trim().split(/\s+/);
+            if (fields.length !== 5 && fields.length !== 6) {
+                throw new Error(`Expected 5 or 6 fields, got ${fields.length} ("${expr}")`);
+            }
+            const hasSeconds = fields.length === 6;
+            const names = hasSeconds ? ['second', 'minute', 'hour', 'dom', 'month', 'dow'] : ['minute', 'hour', 'dom', 'month', 'dow'];
+            const f = {};
+            names.forEach((n, i) => { f[n] = parseField(fields[i], FIELD_SPECS[n]); });
+            f.hasSeconds = hasSeconds;
+            return f;
+        }
+
+        function update() {
+            const expr = $('cronInput').value;
+            $('errorBox').classList.add('hidden');
+            try {
+                const f = parse(expr);
+                const runs = nextRuns(new Date(), f);
+                if (runs.length === 0) throw new Error('No upcoming runs found within 5 years — the expression may never match (e.g. Feb 30).');
+                $('scheduleDesc').textContent = describe(f, f.hasSeconds);
+                render(runs, f);
+                renderFields(f);
+                $('results').classList.remove('hidden');
+            } catch (err) {
+                $('results').classList.add('hidden');
+                $('errorBox').textContent = '✗ ' + err.message;
+                $('errorBox').classList.remove('hidden');
+            }
+        }
+
+        // ─── Init ───
+        const presetRow = $('presets');
+        PRESETS.forEach((p) => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'btn-ghost';
+            btn.textContent = p.label;
+            btn.addEventListener('click', () => {
+                $('cronInput').value = p.expr;
+                update();
+            });
+            presetRow.appendChild(btn);
+        });
+
+        let debounce;
+        $('cronInput').addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(update, 200);
+        });
+
+        update();
+    </script>
+</body>
+</html>
