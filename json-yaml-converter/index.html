@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JSON ↔ YAML Converter — Vibe-Coded Tools</title>
+    <meta name="description" content="Convert between JSON and YAML in both directions with live validation and syntax error reporting. 100% client-side." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔄</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        .tool-input[readonly] { cursor: default; }
+        textarea.tool-input { line-height: 1.6; }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+        .btn-primary:active { transform: translateY(0); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .tool-select { padding: 0.625rem 1rem; border-radius: 12px; font-size: 0.875rem; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; }
+        .tool-select:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-select option { background: #1e293b; color: #e2e8f0; }
+
+        .error-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem; line-height: 1.5; }
+        .hint-box { background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2); color: #93c5fd; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem; line-height: 1.5; }
+
+        .dir-toggle { display: inline-flex; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; padding: 0.25rem; gap: 0.25rem; }
+        .dir-toggle button { padding: 0.5rem 1rem; border-radius: 9px; font-size: 0.8125rem; font-weight: 600; border: none; cursor: pointer; background: transparent; color: #64748b; transition: all 0.15s ease; }
+        .dir-toggle button.active { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 10px -2px rgba(59,130,246,0.4); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🔄 JSON ↔ YAML Converter</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Convert between JSON and YAML in both directions with live validation and line-accurate syntax errors. 100% client-side — your data never leaves the browser.
+            </p>
+        </div>
+
+        <!-- Controls -->
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <div class="dir-toggle" id="dirToggle">
+                    <button type="button" data-dir="j2y" class="active">JSON → YAML</button>
+                    <button type="button" data-dir="y2j">YAML → JSON</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500" for="indentSelect">Indent</label>
+                    <select id="indentSelect" class="tool-select text-xs">
+                        <option value="2" selected>2 spaces</option>
+                        <option value="4">4 spaces</option>
+                    </select>
+                </div>
+                <div class="ml-auto flex gap-2">
+                    <button type="button" id="sampleBtn" class="btn-ghost">📋 Load Sample</button>
+                    <button type="button" id="swapBtn" class="btn-ghost">⇄ Swap &amp; Flip</button>
+                    <button type="button" id="copyBtn" class="btn-secondary">📑 Copy Output</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-2" for="inputArea">Input</label>
+                    <textarea id="inputArea" class="tool-input h-96" spellcheck="false" placeholder='{"name": "Sanak Robot", "role": "assistant", "skills": ["coding", "automation"], "active": true}'></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-2" for="outputArea">Output</label>
+                    <textarea id="outputArea" class="tool-input h-96" readonly placeholder="Converted output appears here…"></textarea>
+                </div>
+            </div>
+
+            <div id="metaLine" class="text-xs text-gray-500 mt-3"></div>
+            <div id="errorBox" class="error-box hidden mt-3"></div>
+            <div id="hintBox" class="hint-box hidden mt-3"></div>
+        </div>
+
+        <div class="footer-disc fade-in-delay-3 mt-6">
+            ⚠️ <strong>Notes:</strong> Uses the <span class="font-mono">js-yaml</span> library (v4, YAML 1.2 core schema) — same approach as the QR tool's library.
+            YAML anchors, aliases, and complex tags are expanded to plain values. Duplicate keys in YAML are reported as errors.
+            Both panes are plain text; nothing is uploaded anywhere.
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+        let direction = 'j2y';
+
+        const SAMPLE = {
+            j2y: `{
+  "name": "Sanak Robot",
+  "role": "assistant",
+  "yearsActive": 1,
+  "openSource": true,
+  "stack": ["Go", "Node.js", "Python"],
+  "config": {
+    "maxTurns": 500,
+    "reasoningEffort": "medium",
+    "platforms": ["telegram", "discord", "whatsapp"]
+  },
+  "notes": null
+}`,
+            y2j: `# Sanak Robot config
+name: Sanak Robot
+role: assistant
+yearsActive: 1
+openSource: true
+stack:
+  - Go
+  - Node.js
+  - Python
+config:
+  maxTurns: 500
+  reasoningEffort: medium
+  platforms:
+    - telegram
+    - discord
+    - whatsapp
+notes: null
+`
+        };
+
+        function setDirection(dir) {
+            direction = dir;
+            document.querySelectorAll('#dirToggle button').forEach((b) => {
+                b.classList.toggle('active', b.dataset.dir === dir);
+            });
+            $('indentSelect').parentElement.style.opacity = dir === 'j2y' ? '1' : '0.35';
+            convert();
+        }
+
+        function clearMessages() {
+            $('errorBox').classList.add('hidden');
+            $('hintBox').classList.add('hidden');
+        }
+
+        function showError(msg) {
+            $('errorBox').textContent = '✗ ' + msg;
+            $('errorBox').classList.remove('hidden');
+        }
+
+        function showHint(msg) {
+            $('hintBox').textContent = msg;
+            $('hintBox').classList.remove('hidden');
+        }
+
+        function lineCol(text, index) {
+            const before = text.slice(0, index);
+            const lines = before.split('\n');
+            return { line: lines.length, col: lines[lines.length - 1].length + 1 };
+        }
+
+        function jsonErrorDetail(raw, err) {
+            // JSON.parse messages look like: "Unexpected token } in JSON at position 42"
+            const m = /position (\d+)/.exec(err.message || '');
+            if (m) {
+                const { line, col } = lineCol(raw, parseInt(m[1], 10));
+                return ` (line ${line}, column ${col})`;
+            }
+            return '';
+        }
+
+        function convert() {
+            const raw = $('inputArea').value;
+            clearMessages();
+            if (!raw.trim()) {
+                $('outputArea').value = '';
+                $('metaLine').textContent = '';
+                return;
+            }
+
+            try {
+                if (direction === 'j2y') {
+                    const obj = JSON.parse(raw);
+                    const yaml = jsyaml.dump(obj, {
+                        indent: parseInt($('indentSelect').value, 10),
+                        lineWidth: -1,
+                        noRefs: true,
+                        sortKeys: false,
+                    });
+                    $('outputArea').value = yaml;
+                    const keyCount = Array.isArray(obj) ? obj.length : Object.keys(obj).length;
+                    const unit = keyCount === 1 ? (Array.isArray(obj) ? 'item' : 'key') : (Array.isArray(obj) ? 'items' : 'keys');
+                    const top = `${Array.isArray(obj) ? 'array' : 'object'} (${keyCount} ${unit})`;
+                    $('metaLine').textContent = `✓ Converted to YAML — top-level ${top} · ${yaml.split('\n').length} lines`;
+                    // Hint if it also parses as YAML (likely pasted YAML in the wrong direction)
+                    try {
+                        jsyaml.load(raw);
+                        showHint('💡 Input is also valid YAML — did you mean YAML → JSON?');
+                    } catch (e) { /* not YAML, no hint */ }
+                } else {
+                    const obj = jsyaml.load(raw);
+                    const json = JSON.stringify(obj, null, 2);
+                    $('outputArea').value = json;
+                    const keyCount = Array.isArray(obj) ? obj.length : Object.keys(obj).length;
+                    const unit = keyCount === 1 ? (Array.isArray(obj) ? 'item' : 'key') : (Array.isArray(obj) ? 'items' : 'keys');
+                    const top = `${Array.isArray(obj) ? 'array' : 'object'} (${keyCount} ${unit})`;
+                    $('metaLine').textContent = `✓ Converted to JSON — top-level ${top} · ${json.split('\n').length} lines`;
+                    // Hint if it also parses as JSON (likely pasted JSON in the wrong direction)
+                    try {
+                        JSON.parse(raw);
+                        showHint('💡 Input is also valid JSON — did you mean JSON → YAML?');
+                    } catch (e) { /* not JSON, no hint */ }
+                }
+            } catch (err) {
+                $('outputArea').value = '';
+                $('metaLine').textContent = '';
+                if (direction === 'j2y') {
+                    const detail = jsonErrorDetail(raw, err);
+                    let msg = `Invalid JSON${detail}: ${err.message}`;
+                    try {
+                        jsyaml.load(raw);
+                        msg += ' — but it parses as YAML! Switch to the YAML → JSON direction.';
+                    } catch (e) { /* not YAML */ }
+                    showError(msg);
+                } else {
+                    const mark = err.mark;
+                    let loc = '';
+                    if (mark && typeof mark.line === 'number') {
+                        loc = ` (line ${mark.line + 1}, column ${mark.column + 1})`;
+                    }
+                    showError(`Invalid YAML${loc}: ${err.reason || err.message}`);
+                }
+            }
+        }
+
+        // ─── Events ───
+        document.querySelectorAll('#dirToggle button').forEach((b) => {
+            b.addEventListener('click', () => setDirection(b.dataset.dir));
+        });
+        $('indentSelect').addEventListener('change', convert);
+
+        let debounce;
+        $('inputArea').addEventListener('input', () => {
+            clearTimeout(debounce);
+            debounce = setTimeout(convert, 250);
+        });
+
+        $('sampleBtn').addEventListener('click', () => {
+            $('inputArea').value = SAMPLE[direction];
+            convert();
+        });
+
+        $('swapBtn').addEventListener('click', () => {
+            const out = $('outputArea').value;
+            if (!out.trim()) return;
+            $('inputArea').value = out;
+            setDirection(direction === 'j2y' ? 'y2j' : 'j2y');
+        });
+
+        $('copyBtn').addEventListener('click', async () => {
+            const out = $('outputArea').value;
+            if (!out.trim()) return;
+            try {
+                await navigator.clipboard.writeText(out);
+                const el = $('copyBtn');
+                const old = el.textContent;
+                el.textContent = '✅ Copied!';
+                setTimeout(() => { el.textContent = old; }, 1500);
+            } catch (e) {
+                $('outputArea').select();
+                document.execCommand('copy');
+            }
+        });
+
+        // ─── Init ───
+        $('inputArea').value = SAMPLE.j2y;
+        convert();
+    </script>
+</body>
+</html>

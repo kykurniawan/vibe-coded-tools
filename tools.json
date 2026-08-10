@@ -125,6 +125,13 @@
             "description": "Parse cron expressions into a human-readable schedule and compute the next run times. Supports 5-field and 6-field syntax with names, ranges, steps, and L.",
             "icon": "⏰",
             "path": "cron-parser/"
+        },
+        {
+            "id": "json-yaml-converter",
+            "name": "JSON ↔ YAML Converter",
+            "description": "Convert between JSON and YAML in both directions with live validation, line-accurate errors, and smart wrong-direction hints.",
+            "icon": "🔄",
+            "path": "json-yaml-converter/"
         }
     ]
 }
