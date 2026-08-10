@@ -399,6 +399,7 @@
             'number-base': 'Conversion',
             'vscode-theme-generator': 'Developer Tools',
             'cron-parser': 'Developer Tools',
+            'json-yaml-converter': 'Conversion',
         };
         const CATEGORY_COLORS = {
             'Encoding': { bg: 'rgba(14,165,233,0.12)', text: '#38bdf8', border: 'rgba(14,165,233,0.2)' },
@@ -410,7 +411,7 @@
         };
 
         // Mark which tools are "new" (by ID)
-        const NEW_TOOL_IDS = new Set(['vscode-theme-generator', 'cron-parser']);
+        const NEW_TOOL_IDS = new Set(['vscode-theme-generator', 'cron-parser', 'json-yaml-converter']);
 
         // ─── DOM Refs ───
         const container = document.getElementById('tools-container');
