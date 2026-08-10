@@ -118,6 +118,13 @@
             "description": "Create custom VS Code themes from a primary color. Preview with live syntax highlighting and download the JSON.",
             "icon": "🎨",
             "path": "vscode-theme-generator/"
+        },
+        {
+            "id": "cron-parser",
+            "name": "Cron Expression Parser",
+            "description": "Parse cron expressions into a human-readable schedule and compute the next run times. Supports 5-field and 6-field syntax with names, ranges, steps, and L.",
+            "icon": "⏰",
+            "path": "cron-parser/"
         }
     ]
 }
