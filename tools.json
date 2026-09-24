@@ -132,6 +132,13 @@
             "description": "Convert between JSON and YAML in both directions with live validation, line-accurate errors, and smart wrong-direction hints.",
             "icon": "🔄",
             "path": "json-yaml-converter/"
+        },
+        {
+            "id": "markdown-preview",
+            "name": "Markdown Preview",
+            "description": "Write Markdown on the left, see rendered HTML on the right. GitHub-flavored Markdown with live preview, copy-HTML, and word count.",
+            "icon": "📄",
+            "path": "markdown-preview/"
         }
     ]
 }
