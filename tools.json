@@ -132,6 +132,13 @@
             "description": "Convert between JSON and YAML in both directions with live validation, line-accurate errors, and smart wrong-direction hints.",
             "icon": "🔄",
             "path": "json-yaml-converter/"
+        },
+        {
+            "id": "curl-converter",
+            "name": "cURL-to-JSON & Mock Generator",
+            "description": "Parse cURL commands into structured JSON (URL, method, headers, query params, body) and generate realistic mock payload responses.",
+            "icon": "🌐",
+            "path": "curl-converter/"
         }
     ]
 }

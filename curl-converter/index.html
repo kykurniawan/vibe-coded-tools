@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>cURL-to-JSON & Mock Generator — Vibe-Coded Tools</title>
+    <meta name="description" content="Parse cURL commands into structured JSON (URL, method, headers, query params, body) and generate realistic mock payload responses. 100% client-side." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+        textarea.tool-input { line-height: 1.6; }
+
+        .btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 12px -4px rgba(59,130,246,0.3); }
+        .btn-primary:hover { background: linear-gradient(135deg, #1d4ed8, #2563eb); box-shadow: 0 4px 20px -4px rgba(59,130,246,0.4); transform: translateY(-1px); }
+
+        .btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .tab-btn { padding: 0.5rem 1rem; border-radius: 9px; font-size: 0.8125rem; font-weight: 600; border: none; cursor: pointer; background: transparent; color: #64748b; transition: all 0.15s ease; }
+        .tab-btn.active { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; box-shadow: 0 2px 10px -2px rgba(59,130,246,0.4); }
+
+        .error-box { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem; line-height: 1.5; }
+        .success-toast { position: fixed; bottom: 2rem; right: 2rem; background: #10b981; color: white; padding: 0.75rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; box-shadow: 0 10px 25px -5px rgba(16,185,129,0.4); transition: opacity 0.3s ease; z-index: 100; opacity: 0; pointer-events: none; }
+        .success-toast.show { opacity: 1; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-5xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">🌐 cURL-to-JSON &amp; Mock Generator</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Parse cURL commands into structured JSON (URL, method, headers, query params, body) and generate realistic mock payloads and code snippets instantly. 100% client-side.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 fade-in-delay-2">
+            <!-- Input Column -->
+            <div class="lg:col-span-6 flex flex-col">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-xs font-medium text-gray-400" for="curlInput">Paste cURL Command</label>
+                    <div class="flex gap-2">
+                        <button type="button" id="sampleBtn" class="btn-ghost">📋 Load Sample</button>
+                        <button type="button" id="clearBtn" class="btn-ghost text-red-400 hover:text-red-300">🗑️ Clear</button>
+                    </div>
+                </div>
+                <textarea id="curlInput" class="tool-input h-[420px]" spellcheck="false" placeholder="curl -X POST 'https://api.example.com/v1/users?active=true' \
+  -H 'Authorization: Bearer secret_token_123' \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;name&quot;: &quot;Alex Johnson&quot;, &quot;email&quot;: &quot;alex@example.com&quot;, &quot;role&quot;: &quot;admin&quot;}'"></textarea>
+                
+                <div id="errorBox" class="error-box hidden mt-3"></div>
+            </div>
+
+            <!-- Output Column -->
+            <div class="lg:col-span-6 flex flex-col tool-card-surface p-5">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4 border-b border-gray-800 pb-3">
+                    <div class="flex bg-gray-900/60 p-1 rounded-xl border border-gray-800">
+                        <button type="button" data-tab="parsed" class="tab-btn active">Parsed JSON</button>
+                        <button type="button" data-tab="mock" class="tab-btn">Mock Payload</button>
+                        <button type="button" data-tab="code" class="tab-btn">Code Snippets</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div id="mockOptions" class="hidden items-center gap-2 text-xs">
+                            <span class="text-gray-400">Items:</span>
+                            <select id="mockCount" class="bg-gray-900 border border-gray-700 text-gray-200 rounded-lg px-2 py-1 text-xs">
+                                <option value="1">1 (Single)</option>
+                                <option value="3" selected>3 items</option>
+                                <option value="5">5 items</option>
+                                <option value="10">10 items</option>
+                            </select>
+                            <button type="button" id="regenMockBtn" class="btn-ghost">🔄 Regenerate</button>
+                        </div>
+                        <button type="button" id="copyOutputBtn" class="btn-secondary text-xs py-1.5 px-3">📑 Copy</button>
+                    </div>
+                </div>
+
+                <div class="flex-1 relative flex flex-col">
+                    <textarea id="outputArea" class="tool-input h-[360px] flex-1 bg-gray-950/80" readonly placeholder="Parsed output will appear here..."></textarea>
+                </div>
+
+                <div id="metaInfo" class="text-xs text-gray-500 mt-3 flex items-center justify-between">
+                    <span id="statusText">Ready</span>
+                    <span id="methodBadge" class="hidden px-2 py-0.5 rounded font-mono text-[10px] font-bold"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="success-toast">Copied to clipboard!</div>
+
+    <script>
+        const samples = [
+            `curl -X POST 'https://api.example.com/v1/users?source=web&debug=true' \\
+  -H 'Authorization: Bearer sec_tok_98765' \\
+  -H 'Content-Type: application/json' \\
+  -d '{"name": "Sarah Connor", "email": "sarah@cyberdyne.io", "age": 34, "active": true}'`,
+            `curl 'https://api.github.com/repos/kykurniawan/vibe-coded-tools/issues?state=open&per_page=10' \\
+  -H 'Accept: application/vnd.github+json' \\
+  -H 'User-Agent: VibeCodedAgent'`,
+            `curl -X PUT 'https://api.store.com/v2/orders/ord_55412' \\
+  -H 'Content-Type: application/x-www-form-urlencoded' \\
+  -d 'status=shipped&carrier=fedex&tracking_code=TRK998234'`
+        ];
+
+        let sampleIndex = 0;
+        let parsedResult = null;
+
+        const curlInput = document.getElementById('curlInput');
+        const outputArea = document.getElementById('outputArea');
+        const errorBox = document.getElementById('errorBox');
+        const statusText = document.getElementById('statusText');
+        const methodBadge = document.getElementById('methodBadge');
+        const mockOptions = document.getElementById('mockOptions');
+        const mockCount = document.getElementById('mockCount');
+        const toast = document.getElementById('toast');
+
+        let activeTab = 'parsed';
+
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                activeTab = btn.dataset.tab;
+                if (activeTab === 'mock') {
+                    mockOptions.classList.remove('hidden');
+                    mockOptions.classList.add('flex');
+                } else {
+                    mockOptions.classList.remove('flex');
+                    mockOptions.classList.add('hidden');
+                }
+                renderOutput();
+            });
+        });
+
+        document.getElementById('sampleBtn').addEventListener('click', () => {
+            curlInput.value = samples[sampleIndex];
+            sampleIndex = (sampleIndex + 1) % samples.length;
+            parseAndRender();
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            curlInput.value = '';
+            parseAndRender();
+        });
+
+        document.getElementById('copyOutputBtn').addEventListener('click', () => {
+            if (!outputArea.value) return;
+            navigator.clipboard.writeText(outputArea.value).then(() => {
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 2000);
+            });
+        });
+
+        document.getElementById('regenMockBtn').addEventListener('click', () => {
+            if (activeTab === 'mock') renderOutput();
+        });
+
+        mockCount.addEventListener('change', () => {
+            if (activeTab === 'mock') renderOutput();
+        });
+
+        curlInput.addEventListener('input', parseAndRender);
+
+        function parseCurl(str) {
+            if (!str || !str.trim()) return null;
+
+            // Normalize line continuations (\ or ^) and newlines
+            let cleaned = str
+                .replace(/\\\r?\n/g, ' ')
+                .replace(/\^\r?\n/g, ' ')
+                .trim();
+
+            if (!cleaned.startsWith('curl')) {
+                // If it doesn't start with curl, prepend or treat as command
+                cleaned = 'curl ' + cleaned;
+            }
+
+            // Simple tokenization honoring quotes
+            const tokens = [];
+            let current = '';
+            let inQuote = null;
+            let escaped = false;
+
+            for (let i = 0; i < cleaned.length; i++) {
+                const char = cleaned[i];
+                if (escaped) {
+                    current += char;
+                    escaped = false;
+                    continue;
+                }
+                if (char === '\\') {
+                    escaped = true;
+                    continue;
+                }
+                if ((char === '"' || char === "'")) {
+                    if (inQuote === char) {
+                        inQuote = null;
+                        continue;
+                    } else if (!inQuote) {
+                        inQuote = char;
+                        continue;
+                    }
+                }
+                if (!inQuote && /\s/.test(char)) {
+                    if (current.length > 0) {
+                        tokens.push(current);
+                        current = '';
+                    }
+                } else {
+                    current += char;
+                }
+            }
+            if (current.length > 0) tokens.push(current);
+
+            let method = null;
+            let url = null;
+            let headers = {};
+            let dataParts = [];
+            let user = null;
+
+            for (let i = 0; i < tokens.length; i++) {
+                const token = tokens[i];
+                if ((token === '-X' || token === '--request') && tokens[i + 1]) {
+                    method = tokens[i + 1].toUpperCase();
+                    i++;
+                } else if ((token === '-H' || token === '--header') && tokens[i + 1]) {
+                    const hVal = tokens[i + 1];
+                    const colonIdx = hVal.indexOf(':');
+                    if (colonIdx > 0) {
+                        const hKey = hVal.substring(0, colonIdx).trim();
+                        const hValContent = hVal.substring(colonIdx + 1).trim();
+                        headers[hKey] = hValContent;
+                    }
+                    i++;
+                } else if ((token === '-d' || token === '--data' || token === '--data-raw' || token === '--data-binary' || token === '--data-urlencode' || token === '--json') && tokens[i + 1]) {
+                    dataParts.push(tokens[i + 1]);
+                    i++;
+                } else if ((token === '-u' || token === '--user') && tokens[i + 1]) {
+                    user = tokens[i + 1];
+                    i++;
+                    const colonIdx = user.indexOf(':');
+                    if (colonIdx >= 0) {
+                        const uName = user.substring(0, colonIdx);
+                        const uPass = user.substring(colonIdx + 1);
+                        headers['Authorization'] = 'Basic ' + btoa(uName + ':' + uPass);
+                    } else {
+                        headers['Authorization'] = 'Basic ' + btoa(user + ':');
+                    }
+                } else if (!token.startsWith('-') && !url) {
+                    url = token;
+                } else if (!url && i === tokens.length - 1 && !token.startsWith('-')) {
+                    url = token;
+                }
+            }
+
+            // Fallback URL extraction if not found as standalone token
+            if (!url) {
+                for (const t of tokens) {
+                    if (t.includes('http://') || t.includes('https://') || t.includes('://')) {
+                        url = t;
+                        break;
+                    }
+                }
+            }
+
+            if (!url) {
+                // Take any non-flag token as URL
+                const nonFlags = tokens.filter(t => !t.startsWith('-'));
+                if (nonFlags.length > 1) {
+                    url = nonFlags[nonFlags.length - 1];
+                }
+            }
+
+            if (!url) {
+                throw new Error("Could not find a valid URL in the cURL command.");
+            }
+
+            // Parse URL & Query params
+            let parsedUrl;
+            let queryParams = {};
+            let baseUrl = url;
+            try {
+                // Ensure absolute URL if possible
+                let fullUrlStr = url;
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    fullUrlStr = 'https://' + url;
+                }
+                parsedUrl = new URL(fullUrlStr);
+                baseUrl = parsedUrl.origin + parsedUrl.pathname;
+                parsedUrl.searchParams.forEach((val, key) => {
+                    queryParams[key] = val;
+                });
+            } catch (e) {
+                // fallback if invalid URL
+            }
+
+            // Default method detection
+            if (!method) {
+                method = dataParts.length > 0 ? 'POST' : 'GET';
+            }
+
+            // Parse body
+            let rawBody = dataParts.join('&');
+            let parsedBody = null;
+            if (rawBody) {
+                try {
+                    parsedBody = JSON.parse(rawBody);
+                    if (!headers['Content-Type'] && !headers['content-type']) {
+                        headers['Content-Type'] = 'application/json';
+                    }
+                } catch (e) {
+                    // Try parsing as urlencoded form data
+                    if (rawBody.includes('=')) {
+                        try {
+                            const usp = new URLSearchParams(rawBody);
+                            const formObj = {};
+                            usp.forEach((v, k) => { formObj[k] = v; });
+                            parsedBody = formObj;
+                            if (!headers['Content-Type'] && !headers['content-type']) {
+                                headers['Content-Type'] = 'application/x-www-form-urlencoded';
+                            }
+                        } catch (err) {
+                            parsedBody = rawBody;
+                        }
+                    } else {
+                        parsedBody = rawBody;
+                    }
+                }
+            }
+
+            return {
+                method,
+                url: baseUrl,
+                fullUrl: url,
+                queryParams,
+                headers,
+                body: parsedBody,
+                rawBody
+            };
+        }
+
+        const FIRST_NAMES = ['Alex', 'Jordan', 'Taylor', 'Sam', 'Morgan', 'Casey', 'Riley', 'Jamie', 'Avery', 'Logan', 'Sarah', 'David', 'Elena', 'Marcus'];
+        const LAST_NAMES = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Connor', 'Vance'];
+        const DOMAINS = ['example.com', 'acme.org', 'cyberdyne.io', 'techcorp.net', 'cloudrun.app'];
+        const STATUSES = ['active', 'pending', 'completed', 'failed', 'shipped', 'processing', 'enabled'];
+        const ROLES = ['admin', 'user', 'moderator', 'guest', 'editor'];
+
+        function generateMockValue(key, sampleVal) {
+            const lKey = (key || '').toLowerCase();
+            const now = new Date().toISOString();
+
+            if (typeof sampleVal === 'boolean') {
+                return Math.random() > 0.3;
+            }
+            if (typeof sampleVal === 'number') {
+                if (lKey.includes('id')) return Math.floor(Math.random() * 90000) + 10000;
+                if (lKey.includes('age')) return Math.floor(Math.random() * 50) + 18;
+                if (lKey.includes('price') || lKey.includes('amount') || lKey.includes('total')) return parseFloat((Math.random() * 500 + 10).toFixed(2));
+                return Math.floor(Math.random() * 100) + 1;
+            }
+
+            if (lKey.includes('id') || lKey.includes('uuid')) {
+                return 'uuid-' + Math.random().toString(36).substring(2, 10) + '-' + Math.random().toString(36).substring(2, 6);
+            }
+            if (lKey.includes('email')) {
+                const fname = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)].toLowerCase();
+                const lname = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)].toLowerCase();
+                const domain = DOMAINS[Math.floor(Math.random() * DOMAINS.length)];
+                return `${fname}.${lname}@${domain}`;
+            }
+            if (lKey.includes('name') || lKey.includes('author') || lKey.includes('user')) {
+                const fname = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+                const lname = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+                return `${fname} ${lname}`;
+            }
+            if (lKey.includes('date') || lKey.includes('time') || lKey.includes('created') || lKey.includes('at')) {
+                return now;
+            }
+            if (lKey.includes('status') || lKey.includes('state')) {
+                return STATUSES[Math.floor(Math.random() * STATUSES.length)];
+            }
+            if (lKey.includes('role')) {
+                return ROLES[Math.floor(Math.random() * ROLES.length)];
+            }
+            if (lKey.includes('phone') || lKey.includes('mobile')) {
+                return '+1-' + Math.floor(Math.random() * 900 + 100) + '-' + Math.floor(Math.random() * 900 + 100) + '-' + Math.floor(Math.random() * 9000 + 1000);
+            }
+
+            if (typeof sampleVal === 'string') {
+                if (sampleVal.length > 30) return 'Sample text string generated for ' + key;
+                return sampleVal + '_' + Math.random().toString(36).substring(2, 6);
+            }
+
+            return 'mock_value_' + Math.floor(Math.random() * 1000);
+        }
+
+        function generateMockObject(template) {
+            if (template === null || template === undefined) {
+                return {
+                    id: "uuid-" + Math.random().toString(36).substring(2, 8),
+                    message: "Success mock response",
+                    timestamp: new Date().toISOString(),
+                    data: { status: "active", value: 42 }
+                };
+            }
+
+            if (Array.isArray(template)) {
+                return template.map(item => generateMockObject(item));
+            }
+
+            if (typeof template === 'object') {
+                const result = {};
+                for (const [k, v] of Object.entries(template)) {
+                    if (v !== null && typeof v === 'object') {
+                        result[k] = generateMockObject(v);
+                    } else {
+                        result[k] = generateMockValue(k, v);
+                    }
+                }
+                return result;
+            }
+
+            return generateMockValue('field', template);
+        }
+
+        function generateCodeSnippets(res) {
+            if (!res) return '';
+            const { method, fullUrl, headers, rawBody } = res;
+            
+            const headersFormatted = JSON.stringify(headers, null, 4);
+
+            const fetchSnippet = `// JavaScript Fetch API
+fetch("${fullUrl}", {
+  method: "${method}",
+  headers: ${headersFormatted}${rawBody ? ',\n  body: JSON.stringify(' + (tryParseJson(rawBody) ? JSON.stringify(JSON.parse(rawBody), null, 2) : '"' + rawBody + '"') + ')' : ''}
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));`;
+
+            const axiosSnippet = `// Axios (Node.js / Browser)
+axios({
+  method: '${method.toLowerCase()}',
+  url: '${fullUrl}',
+  headers: ${headersFormatted}${rawBody ? ',\n  data: ' + (tryParseJson(rawBody) ? JSON.stringify(JSON.parse(rawBody), null, 4) : '"' + rawBody + '"') : ''}
+})
+  .then(response => console.log(response.data))
+  .catch(error => console.error(error));`;
+
+            const pythonSnippet = `# Python Requests
+import requests
+
+url = "${fullUrl}"
+headers = ${JSON.stringify(headers, null, 4).replace(/:/g, ':')}
+${rawBody ? 'data = ' + (tryParseJson(rawBody) ? JSON.stringify(JSON.parse(rawBody), null, 4) : '"' + rawBody + '"') : ''}
+
+response = requests.request("${method}", url, headers=headers${rawBody ? ', json=data' : ''})
+print(response.json())`;
+
+            return `=== JAVASCRIPT FETCH ===\n\n${fetchSnippet}\n\n=== AXIOS ===\n\n${axiosSnippet}\n\n=== PYTHON REQUESTS ===\n\n${pythonSnippet}`;
+        }
+
+        function tryParseJson(str) {
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function parseAndRender() {
+            errorBox.classList.add('hidden');
+            errorBox.textContent = '';
+
+            const inputStr = curlInput.value;
+            if (!inputStr.trim()) {
+                parsedResult = null;
+                outputArea.value = '';
+                statusText.textContent = 'Ready';
+                methodBadge.classList.add('hidden');
+                return;
+            }
+
+            try {
+                parsedResult = parseCurl(inputStr);
+                statusText.textContent = 'Parsed Successfully';
+                methodBadge.textContent = parsedResult.method;
+                methodBadge.className = 'px-2 py-0.5 rounded font-mono text-[10px] font-bold ' + getMethodColor(parsedResult.method);
+                methodBadge.classList.remove('hidden');
+                renderOutput();
+            } catch (err) {
+                parsedResult = null;
+                outputArea.value = '';
+                errorBox.textContent = 'Parsing Error: ' + err.message;
+                errorBox.classList.remove('hidden');
+                statusText.textContent = 'Error';
+                methodBadge.classList.add('hidden');
+            }
+        }
+
+        function getMethodColor(m) {
+            switch (m) {
+                case 'GET': return 'bg-blue-500/20 text-blue-400 border border-blue-500/30';
+                case 'POST': return 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                case 'PUT': return 'bg-amber-500/20 text-amber-400 border border-amber-500/30';
+                case 'DELETE': return 'bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                default: return 'bg-purple-500/20 text-purple-400 border border-purple-500/30';
+            }
+        }
+
+        function renderOutput() {
+            if (!parsedResult) {
+                outputArea.value = '';
+                return;
+            }
+
+            if (activeTab === 'parsed') {
+                outputArea.value = JSON.stringify(parsedResult, null, 2);
+            } else if (activeTab === 'mock') {
+                const count = parseInt(mockCount.value, 10) || 1;
+                let template = parsedResult.body;
+                if (typeof template === 'string') {
+                    template = tryParseJson(template) || { message: template };
+                }
+
+                if (count === 1) {
+                    const mockObj = generateMockObject(template);
+                    outputArea.value = JSON.stringify(mockObj, null, 2);
+                } else {
+                    const mockArr = [];
+                    for (let i = 0; i < count; i++) {
+                        mockArr.push(generateMockObject(template));
+                    }
+                    outputArea.value = JSON.stringify(mockArr, null, 2);
+                }
+            } else if (activeTab === 'code') {
+                outputArea.value = generateCodeSnippets(parsedResult);
+            }
+        }
+
+        // Initialize with first sample on load
+        curlInput.value = samples[0];
+        parseAndRender();
+    </script>
+</body>
+</html>
