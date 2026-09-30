@@ -4,105 +4,105 @@
             "id": "base64",
             "name": "Base64 Encoder / Decoder",
             "description": "Encode text to Base64 or decode Base64 strings back to readable text. Supports UTF-8 and ASCII.",
-            "icon": "\ud83d\udd10",
+            "icon": "🔐",
             "path": "base64/"
         },
         {
             "id": "uuid-generator",
             "name": "UUID Generator",
             "description": "Generate UUID v4 (random) and UUID v7 (time-ordered) with bulk generation and copy-to-clipboard.",
-            "icon": "\ud83c\udd94",
+            "icon": "🆔",
             "path": "uuid-generator/"
         },
         {
             "id": "hash-generator",
             "name": "Hash Generator",
             "description": "Generate SHA-1, SHA-256, SHA-384, SHA-512 and MD5 hashes from any text input using browser-native crypto.",
-            "icon": "#\ufe0f\u20e3",
+            "icon": "🔢",
             "path": "hash-generator/"
         },
         {
             "id": "json-formatter",
             "name": "JSON Formatter & Validator",
             "description": "Format, validate, and minify JSON. Beautify messy JSON with syntax highlighting and line numbers.",
-            "icon": "\ud83d\udccb",
+            "icon": "📋",
             "path": "json-formatter/"
         },
         {
             "id": "jwt-decoder",
             "name": "JWT Decoder",
             "description": "Decode JWT tokens without sending them to a server. Inspect header, payload, and signature parts.",
-            "icon": "\ud83d\udd11",
+            "icon": "🔑",
             "path": "jwt-decoder/"
         },
         {
             "id": "timestamp-converter",
             "name": "Timestamp Converter",
             "description": "Convert between Unix timestamps (seconds/milliseconds) and human-readable dates in various timezones.",
-            "icon": "\u23f1\ufe0f",
+            "icon": "⏲️",
             "path": "timestamp-converter/"
         },
         {
             "id": "url-encoder",
             "name": "URL Encoder / Decoder",
             "description": "Encode or decode URL components and full URLs. Handles special characters and Unicode.",
-            "icon": "\ud83d\udd17",
+            "icon": "🔗",
             "path": "url-encoder/"
         },
         {
             "id": "lorem-ipsum",
             "name": "Lorem Ipsum Generator",
             "description": "Generate placeholder text in various lengths (words, sentences, paragraphs). Customize starting text.",
-            "icon": "\ud83d\udcdd",
+            "icon": "📝",
             "path": "lorem-ipsum/"
         },
         {
             "id": "case-converter",
             "name": "Case Converter",
             "description": "Convert text between lowercase, UPPERCASE, Title Case, camelCase, PascalCase, snake_case, and kebab-case.",
-            "icon": "\ud83d\udd24",
+            "icon": "🔤",
             "path": "case-converter/"
         },
         {
             "id": "qr-code",
             "name": "QR Code Generator",
             "description": "Generate QR codes from any text or URL. Download as PNG. Uses qrcodejs library.",
-            "icon": "\ud83d\udcf1",
+            "icon": "📱",
             "path": "qr-code/"
         },
         {
             "id": "color-converter",
             "name": "Color Converter",
             "description": "Convert colors between HEX, RGB, HSL, and named colors. Pick colors visually with a color picker.",
-            "icon": "\ud83c\udfa8",
+            "icon": "🎨",
             "path": "color-converter/"
         },
         {
             "id": "password-generator",
             "name": "Password Generator",
             "description": "Generate strong random passwords with configurable length and character types. Check password strength.",
-            "icon": "\ud83d\udd12",
+            "icon": "🔒",
             "path": "password-generator/"
         },
         {
             "id": "regex-tester",
             "name": "Regex Tester",
             "description": "Test regular expressions against sample text. Real-time matching with highlight and capture group display.",
-            "icon": "\ud83d\udd0d",
+            "icon": "🔍",
             "path": "regex-tester/"
         },
         {
             "id": "text-diff",
             "name": "Text Diff Checker",
             "description": "Compare two texts and see the differences highlighted side by side. Useful for code or document comparison.",
-            "icon": "\ud83d\udcca",
+            "icon": "📊",
             "path": "text-diff/"
         },
         {
             "id": "number-base",
             "name": "Number Base Converter",
             "description": "Convert numbers between binary (base 2), octal (base 8), decimal (base 10), and hexadecimal (base 16).",
-            "icon": "\ud83d\udd22",
+            "icon": "🔢",
             "path": "number-base/"
         },
         {
@@ -132,6 +132,20 @@
             "description": "Convert between JSON and YAML in both directions with live validation, line-accurate errors, and smart wrong-direction hints.",
             "icon": "🔄",
             "path": "json-yaml-converter/"
+        },
+        {
+            "id": "markdown-preview",
+            "name": "Markdown Preview",
+            "description": "Write Markdown on the left, see rendered HTML on the right. GitHub-flavored Markdown with live preview, copy-HTML, and word count.",
+            "icon": "📄",
+            "path": "markdown-preview/"
+        },
+        {
+            "id": "csv-viewer",
+            "name": "CSV Viewer & Converter",
+            "description": "Parse, inspect, search, filter, sort, and convert CSV/TSV files into interactive tables and JSON format.",
+            "icon": "📊",
+            "path": "csv-viewer/"
         },
         {
             "id": "curl-converter",
