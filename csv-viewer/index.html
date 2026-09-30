@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSV Viewer — Vibe-Coded Tools</title>
+    <meta name="description" content="View, search, sort, filter, and convert CSV and TSV files into interactive tables and JSON. 100% client-side." />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        textarea { resize: vertical; }
+
+        .back-link { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; font-weight: 500; color: rgba(148,163,184,0.8); text-decoration: none; transition: all 0.2s ease; padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(30,41,59,0.3); border: 1px solid transparent; }
+        .back-link:hover { color: #60a5fa; background: rgba(30,41,59,0.6); border-color: rgba(59,130,246,0.15); }
+
+        .tool-card-surface { background: rgba(30,41,59,0.4); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(51,65,85,0.4); border-radius: 16px; }
+
+        .tool-input { width: 100%; padding: 0.875rem 1rem; border-radius: 12px; font-size: 0.875rem; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; }
+        .tool-input:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+        .tool-input::placeholder { color: rgba(100,116,139,0.6); }
+
+        .tool-select { padding: 0.5rem 0.875rem; border-radius: 10px; font-size: 0.875rem; outline: none; transition: all 0.2s ease; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); color: #e2e8f0; cursor: pointer; }
+        .tool-select:focus { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 0 3px rgba(59,130,246,0.08); }
+
+        .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.5rem; border-radius: 10px; font-size: 0.875rem; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s ease; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; box-shadow: 0 4px 12px -2px rgba(59,130,246,0.4); }
+        .btn-primary:hover { background: linear-gradient(135deg, #2563eb, #1d4ed8); transform: translateY(-1px); }
+
+        .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.625rem 1.25rem; border-radius: 10px; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: rgba(51,65,85,0.3); color: #94a3b8; border: 1px solid rgba(51,65,85,0.3); }
+        .btn-secondary:hover { background: rgba(51,65,85,0.5); color: #e2e8f0; border-color: rgba(71,85,105,0.5); }
+
+        .btn-ghost { display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; border-radius: 8px; font-size: 0.75rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; background: transparent; border: 1px solid rgba(51,65,85,0.3); color: rgba(148,163,184,0.7); }
+        .btn-ghost:hover { background: rgba(30,41,59,0.4); color: #94a3b8; border-color: rgba(51,65,85,0.5); }
+
+        .drop-zone { border: 2px dashed rgba(51,65,85,0.8); border-radius: 12px; padding: 1.5rem; text-align: center; transition: all 0.2s ease; background: rgba(15,23,42,0.4); cursor: pointer; }
+        .drop-zone:hover, .drop-zone.dragover { border-color: #3b82f6; background: rgba(59,130,246,0.05); }
+
+        .table-wrapper { width: 100%; overflow-x: auto; background: rgba(15,23,42,0.6); border: 1px solid rgba(51,65,85,0.5); border-radius: 12px; max-height: 520px; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.85rem; }
+        th { position: sticky; top: 0; background: rgba(30,41,59,0.95); backdrop-filter: blur(8px); padding: 0.75rem 1rem; text-align: left; font-weight: 600; color: #f1f5f9; border-bottom: 1px solid rgba(51,65,85,0.8); user-select: none; cursor: pointer; white-space: nowrap; }
+        th:hover { background: rgba(51,65,85,0.8); color: #38bdf8; }
+        td { padding: 0.625rem 1rem; border-bottom: 1px solid rgba(51,65,85,0.3); color: #cbd5e1; white-space: nowrap; font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 0.8125rem; }
+        tr:nth-child(even) td { background: rgba(30,41,59,0.2); }
+        tr:hover td { background: rgba(59,130,246,0.08); }
+
+        .footer-disc { padding: 0.75rem 1rem; border-radius: 10px; font-size: 0.75rem; line-height: 1.5; background: rgba(217,119,6,0.06); border: 1px solid rgba(217,119,6,0.12); color: rgba(251,191,36,0.8); }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(51,65,85,0.4); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.6); }
+
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeInUp 0.4s ease-out; }
+        .fade-in-delay-1 { animation: fadeInUp 0.4s ease-out 0.1s both; }
+        .fade-in-delay-2 { animation: fadeInUp 0.4s ease-out 0.2s both; }
+        .fade-in-delay-3 { animation: fadeInUp 0.4s ease-out 0.3s both; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+    <nav class="fixed top-0 left-0 right-0 z-50 border-b border-gray-800/50" style="background: rgba(2,6,23,0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <a href="../" class="flex items-center gap-2.5 text-lg font-bold tracking-tight no-underline text-inherit">
+                <span class="text-2xl">🔧</span>
+                <span class="inline">Vibe-Coded Tools</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-4 pt-24 pb-16">
+        <a href="../" class="back-link fade-in">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            All Tools
+        </a>
+
+        <div class="fade-in-delay-1 mt-5 mb-8">
+            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">📊 CSV Viewer & Converter</h1>
+            <p class="text-gray-400 text-base leading-relaxed">
+                Parse, inspect, search, filter, and convert CSV or TSV files into interactive tables and JSON. 100% client-side.
+            </p>
+        </div>
+
+        <div class="tool-card-surface p-5 sm:p-6 fade-in-delay-2">
+            <!-- Controls bar top -->
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" id="sampleBtn" class="btn-ghost">📋 Load Sample CSV</button>
+                    <button type="button" id="clearBtn" class="btn-ghost">✕ Clear</button>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <label class="inline-flex items-center gap-2 text-xs text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="headerCheckbox" checked class="rounded border-gray-700 bg-gray-900 text-blue-500 focus:ring-blue-500">
+                        First row is header
+                    </label>
+                    <div class="flex items-center gap-1 text-xs text-gray-400">
+                        <span>Delimiter:</span>
+                        <select id="delimiterSelect" class="tool-select text-xs py-1 px-2">
+                            <option value="auto">Auto-detect</option>
+                            <option value=",">Comma (,)</option>
+                            <option value="&#9;">Tab (\t)</option>
+                            <option value=";">Semicolon (;)</option>
+                            <option value="|">Pipe (|)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Drag and Drop / Upload / Paste zone -->
+            <div id="dropZone" class="drop-zone mb-4">
+                <input type="file" id="fileInput" accept=".csv,.tsv,.txt" class="hidden" />
+                <p class="text-sm font-medium text-gray-300 mb-1">📁 Drag & drop a CSV or TSV file here, or click to browse</p>
+                <p class="text-xs text-gray-500">Or paste raw CSV text in the area below</p>
+            </div>
+
+            <div class="mb-4">
+                <textarea id="rawInput" class="tool-input h-32" spellcheck="false" placeholder="id,name,role,department,salary&#10;1,Alice,Engineer,Product,120000&#10;2,Bob,Designer,Product,110000"></textarea>
+            </div>
+
+            <div id="libError" class="hidden mb-4" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem;">
+                ⚠️ Could not load PapaParse from CDN. Check your internet connection and reload.
+            </div>
+
+            <div id="parseError" class="hidden mb-4" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; border-radius: 12px; padding: 0.875rem 1rem; font-size: 0.875rem;"></div>
+
+            <!-- View / Filter / Export Section -->
+            <div id="outputSection" class="hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-3 border-t border-gray-800 pt-4">
+                    <div class="flex items-center gap-2 flex-1 min-w-[200px]">
+                        <input type="text" id="searchInput" class="tool-input text-xs py-1.5 px-3" placeholder="🔍 Search table..." />
+                    </div>
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <span id="statsLabel" class="font-mono">0 rows</span>
+                        <div class="h-4 w-px bg-gray-800 mx-1"></div>
+                        <button type="button" id="copyJsonBtn" class="btn-ghost">📑 Copy as JSON</button>
+                        <button type="button" id="copyCsvBtn" class="btn-ghost">📑 Copy Clean CSV</button>
+                        <button type="button" id="downloadJsonBtn" class="btn-secondary text-xs py-1 px-3">💾 Download JSON</button>
+                    </div>
+                </div>
+
+                <div class="table-wrapper">
+                    <table id="dataTable">
+                        <thead id="tableHead"></thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-disc fade-in-delay-3 mt-6">
+            ⚠️ <strong>Notes:</strong> Powered by <span class="font-mono">PapaParse</span> for fast, robust client-side CSV parsing. Handles quotes, multiline values, auto-delimiter detection, and large datasets effortlessly. Nothing is sent to any server.
+            <a href="https://github.com/kykurniawan/vibe-coded-tools/tree/main/csv-viewer" target="_blank" rel="noopener" class="font-semibold underline underline-offset-2 decoration-dotted text-amber-300 hover:text-amber-200">View source</a>
+        </div>
+    </div>
+
+    <script>
+        const $ = (id) => document.getElementById(id);
+
+        const SAMPLE = `id,name,role,department,salary,status
+1,Alice Smith,Senior Software Engineer,Engineering,135000,Active
+2,Bob Jones,Product Manager,Product,125000,Active
+3,Charlie Brown,UX Designer,Design,105000,On Leave
+4,Diana Prince,Engineering Manager,Engineering,155000,Active
+5,Evan Wright,Data Analyst,Analytics,95000,Active
+6,Fiona Gallagher,QA Lead,Quality,110000,Active
+7,George Clark,DevOps Engineer,Infrastructure,130000,Active
+8,Hannah Abbott,Frontend Developer,Engineering,115000,Inactive`;
+
+        let parsedData = [];
+        let parsedHeaders = [];
+        let sortColumn = null;
+        let sortAsc = true;
+
+        function checkLib() {
+            return typeof Papa !== 'undefined';
+        }
+
+        function parseCSV() {
+            if (!checkLib()) {
+                $('libError').classList.remove('hidden');
+                return;
+            }
+
+            const raw = $('rawInput').value.trim();
+            $('parseError').classList.add('hidden');
+            if (!raw) {
+                $('outputSection').classList.add('hidden');
+                return;
+            }
+
+            const hasHeader = $('headerCheckbox').checked;
+            const delimiterVal = $('delimiterSelect').value;
+
+            const config = {
+                header: false,
+                skipEmptyLines: true,
+            };
+            if (delimiterVal !== 'auto') {
+                config.delimiter = delimiterVal === '\\t' ? '\t' : delimiterVal;
+            }
+
+            const result = Papa.parse(raw, config);
+
+            if (result.errors && result.errors.length > 0 && result.data.length === 0) {
+                $('parseError').textContent = `Parse error: ${result.errors[0].message}`;
+                $('parseError').classList.remove('hidden');
+                $('outputSection').classList.add('hidden');
+                return;
+            }
+
+            let rows = result.data;
+            if (rows.length === 0) {
+                $('outputSection').classList.add('hidden');
+                return;
+            }
+
+            if (hasHeader) {
+                parsedHeaders = rows[0].map((h, idx) => (h && h.toString().trim()) ? h.toString().trim() : `Column ${idx + 1}`);
+                parsedData = rows.slice(1);
+            } else {
+                const colCount = Math.max(...rows.map(r => r.length));
+                parsedHeaders = Array.from({ length: colCount }, (_, i) => `Column ${i + 1}`);
+                parsedData = rows;
+            }
+
+            sortColumn = null;
+            sortAsc = true;
+            renderTable();
+            $('outputSection').classList.remove('hidden');
+        }
+
+        function renderTable() {
+            const query = $('searchInput').value.toLowerCase().trim();
+
+            let filtered = parsedData.filter(row => {
+                if (!query) return true;
+                return row.some(cell => (cell || '').toString().toLowerCase().includes(query));
+            });
+
+            if (sortColumn !== null) {
+                filtered.sort((a, b) => {
+                    let valA = a[sortColumn] !== undefined ? a[sortColumn] : '';
+                    let valB = b[sortColumn] !== undefined ? b[sortColumn] : '';
+
+                    let numA = Number(valA);
+                    let numB = Number(valB);
+
+                    if (!isNaN(numA) && !isNaN(numB) && valA !== '' && valB !== '') {
+                        return sortAsc ? numA - numB : numB - numA;
+                    }
+                    return sortAsc ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
+                });
+            }
+
+            // Head
+            let headHtml = '<tr>';
+            parsedHeaders.forEach((h, idx) => {
+                let icon = '↕';
+                if (sortColumn === idx) {
+                    icon = sortAsc ? '▲' : '▼';
+                }
+                headHtml += `<th onclick="handleSort(${idx})">${escapeHtml(h)} <span class="text-xs opacity-60 ml-1">${icon}</span></th>`;
+            });
+            headHtml += '</tr>';
+            $('tableHead').innerHTML = headHtml;
+
+            // Body
+            let bodyHtml = '';
+            if (filtered.length === 0) {
+                bodyHtml = `<tr><td colspan="${parsedHeaders.length}" class="text-center py-8 text-gray-500">No matching rows found</td></tr>`;
+            } else {
+                filtered.forEach(row => {
+                    bodyHtml += '<tr>';
+                    parsedHeaders.forEach((_, idx) => {
+                        let cellVal = row[idx] !== undefined ? row[idx] : '';
+                        bodyHtml += `<td>${escapeHtml(cellVal.toString())}</td>`;
+                    });
+                    bodyHtml += '</tr>';
+                });
+            }
+            $('tableBody').innerHTML = bodyHtml;
+
+            $('statsLabel').textContent = `${filtered.length} of ${parsedData.length} rows (${parsedHeaders.length} cols)`;
+        }
+
+        function handleSort(colIdx) {
+            if (sortColumn === colIdx) {
+                sortAsc = !sortAsc;
+            } else {
+                sortColumn = colIdx;
+                sortAsc = true;
+            }
+            renderTable();
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getJsonData() {
+            return parsedData.map(row => {
+                let obj = {};
+                parsedHeaders.forEach((h, idx) => {
+                    let val = row[idx] !== undefined ? row[idx] : '';
+                    let num = Number(val);
+                    obj[h] = (!isNaN(num) && val !== '') ? num : val;
+                });
+                return obj;
+            });
+        }
+
+        // ─── Event Handlers ───
+        let debounceTimer;
+        $('rawInput').addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(parseCSV, 150);
+        });
+
+        $('headerCheckbox').addEventListener('change', parseCSV);
+        $('delimiterSelect').addEventListener('change', parseCSV);
+        $('searchInput').addEventListener('input', renderTable);
+
+        $('sampleBtn').addEventListener('click', () => {
+            $('rawInput').value = SAMPLE;
+            parseCSV();
+        });
+
+        $('clearBtn').addEventListener('click', () => {
+            $('rawInput').value = '';
+            parseCSV();
+            $('rawInput').focus();
+        });
+
+        // Drop Zone
+        const dropZone = $('dropZone');
+        const fileInput = $('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                $('rawInput').value = e.target.result;
+                parseCSV();
+            };
+            reader.readAsText(file);
+        }
+
+        // Copies & Downloads
+        $('copyJsonBtn').addEventListener('click', async () => {
+            const jsonStr = JSON.stringify(getJsonData(), null, 2);
+            await copyText(jsonStr, $('copyJsonBtn'), ' Copied JSON!');
+        });
+
+        $('copyCsvBtn').addEventListener('click', async () => {
+            const csvStr = Papa.unparse({
+                fields: parsedHeaders,
+                data: parsedData
+            });
+            await copyText(csvStr, $('copyCsvBtn'), ' Copied CSV!');
+        });
+
+        $('downloadJsonBtn').addEventListener('click', () => {
+            const jsonStr = JSON.stringify(getJsonData(), null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'data.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        async function copyText(text, btnEl, successMsg) {
+            try {
+                await navigator.clipboard.writeText(text);
+                const oldText = btnEl.textContent;
+                btnEl.textContent = '✅' + successMsg;
+                setTimeout(() => { btnEl.textContent = oldText; }, 1500);
+            } catch (e) {
+                const ta = document.createElement('textarea');
+                ta.value = text;
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+        }
+
+        // Init
+        if (!checkLib()) {
+            $('libError').classList.remove('hidden');
+        }
+        $('rawInput').value = SAMPLE;
+        parseCSV();
+    </script>
+</body>
+</html>
