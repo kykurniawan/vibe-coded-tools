@@ -134,6 +134,13 @@
             "path": "json-yaml-converter/"
         },
         {
+            "id": "markdown-preview",
+            "name": "Markdown Preview",
+            "description": "Write Markdown on the left, see rendered HTML on the right. GitHub-flavored Markdown with live preview, copy-HTML, and word count.",
+            "icon": "📄",
+            "path": "markdown-preview/"
+        },
+        {
             "id": "csv-viewer",
             "name": "CSV Viewer & Converter",
             "description": "Parse, inspect, search, filter, sort, and convert CSV/TSV files into interactive tables and JSON format.",
